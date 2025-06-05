@@ -1,0 +1,23 @@
+{
+    "time_steps": 150,
+    "bulk_size": 200,
+    "feature_list": [
+        "Vo:Measured voltage",
+        "IL:Measured current",
+        "Vin:Measured voltage"
+    ],
+    "classes_list": [
+        "short1:Output",
+        "short2:Output",
+        "short3:Output",
+        "short4:Output",
+        "open1:Output",
+        "open3:Output",
+        "open2:Output",
+        "open4:Output"
+    ],
+    "train_data_dir": "./dataset/train_dataset_PLECS.csv",
+    "test_data_dir": "./dataset/test_dataset_PLECS.csv",
+    "epochs": 10,
+    "batch_size": 64
+}

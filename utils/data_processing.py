@@ -1,7 +1,51 @@
-from normalization import instance_normalize
 from pandas import read_csv
 import numpy as np
 from tensorflow.keras.utils import to_categorical
+
+##########################################
+##             NORMALIZATION            ##
+##########################################
+
+def instance_normalize(insatnce: np.ndarray,
+                      method: str = "standard",
+                      eps: float = 1e-6) -> np.ndarray:
+    """
+    Returns a Instance normalized data.
+
+    Parameters
+    ----------
+    insatnce : np.ndarray, shape (time_steps, num_features)
+        The sequence data to be normalized.
+    method : str, default="standard"
+        - "minmax": Scales values within insatnce to [0, 1] based on min/max values.
+        - "standard": Standardizes insatnce using mean and standard deviation (mean 0, variance 1).
+    eps : float, default=1e-6
+        A small value added to the denominator to prevent division by zero.
+
+    Returns
+    -------
+    insatnce_norm : np.ndarray, same shape as insatnce
+        The normalized sequence.
+    """
+    if method == "minmax":
+        insatnce_min = np.min(insatnce, axis=0)           #  minimum value of features
+        insatnce_max = np.max(insatnce, axis=0)           #  maximum value of features
+        insatnce_norm = (insatnce - insatnce_min) / (insatnce_max - insatnce_min + eps)
+    
+    elif method == "standard":
+        insatnce_mean = np.mean(insatnce, axis=0)         # mean value of all value
+        insatnce_std  = np.std(insatnce, axis=0)          # standard deviation for each value
+        insatnce_norm = (insatnce - insatnce_mean) / (insatnce_std + eps)
+    
+    else:
+        raise ValueError(f"Unknown method: {method}")
+    
+    return insatnce_norm
+
+
+##########################################
+##           csv to np.array            ##
+##########################################
 
 def load_serial_data_from_csv(input_file,feature_list,classes_list,bulk_size,time_steps):
     '''
@@ -14,7 +58,7 @@ def load_serial_data_from_csv(input_file,feature_list,classes_list,bulk_size,tim
     for i in range(len(classes_list)):
         cls[df[classes_list[i]] > 0] = i+1
 
-    labels = to_categorical(cls, num_classes=len(classes_list))  # shape: (N, 9)
+    labels = to_categorical(cls, num_classes=len(classes_list)+1)  # shape: (N, 9)
 
     # 나머지 시계열 준비 및 정규화 등은 동일하게 유지
     Xs, Ys = [], []
@@ -34,7 +78,7 @@ def load_serial_data_from_csv(input_file,feature_list,classes_list,bulk_size,tim
     norm_data = [instance_normalize(instance, method="minmax") for instance in X_input]
     X_input = np.array(norm_data)
 
-    list = [0]*len(classes_list)
+    list = [0]*(len(classes_list)+1)
     for output in y_output:
         list += output
     print("sample distribution by class:", list)

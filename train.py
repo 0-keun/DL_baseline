@@ -6,7 +6,7 @@ import time
 import tensorflow as tf
 from utils.data_processing import load_serial_data_from_csv
 from utils.utils import save_loss_plot, save_acc_plot
-from models.models import LSTM_model
+from utils.models import LSTM_model
 
 # 멀티-GPU 전략
 strategy = tf.distribute.MirroredStrategy()
@@ -14,18 +14,20 @@ strategy = tf.distribute.MirroredStrategy()
 from tensorflow.keras.mixed_precision import set_global_policy
 set_global_policy("float32")
 
-import matplotlib.pyplot as plt
+import json
 
-class_num = 9
-time_steps = 5
-feature_list = ['Vo:Measured voltage','IL:Measured current','Vin:Measured voltage']
-classes_list = ['Open_1','Short_1','Short_2','Short_3','Short_4','Open_2','Open_3','Open_4']
-bulk_size = 10
-feature_num = len(feature_list)
-train_data_dir = './dataset/train_data.csv'
-epochs        = 100
-batch_size    = 64
+with open('./params/params.json', 'r') as f:
+    params = json.load(f)
 
+TIME_STEPS = params["time_steps"]
+BULK_SIZE = params["bulk_size"]
+TRAIN_DATA_DIR = params["train_data_dir"]
+EPOCHS        = params["epochs"]
+BATCH_SIZE    = params["batch_size"]
+FEATURE_LIST = params["feature_list"]
+CLASSES_LIST = params["classes_list"]
+CLASS_NUM = len(CLASSES_LIST)+1
+FEATURE_NUM = len(FEATURE_LIST)
 
 class Train_Model:
     def __init__(self, hidden_state_num, layer_num):
@@ -37,14 +39,14 @@ class Train_Model:
         )
 
         # 데이터 로드
-        data = load_serial_data_from_csv(train_data_dir,feature_list,classes_list,bulk_size,time_steps)
+        self.X_input, self.y_output = load_serial_data_from_csv(TRAIN_DATA_DIR,FEATURE_LIST,CLASSES_LIST,BULK_SIZE,TIME_STEPS)
 
     def train_model(self, model):
         start_time = time.time()
         history = model.fit(
             self.X_input, self.y_output,
-            epochs=epochs,
-            batch_size=batch_size,
+            epochs=EPOCHS,
+            batch_size=BATCH_SIZE,
             verbose=1
         )
 
@@ -55,9 +57,9 @@ class Train_Model:
         model.save(self.model_name)
 
     def main(self):
-        model = LSTM_model(self.hidden_state_num, class_num, time_steps, feature_num, self.layer_num)
+        model = LSTM_model(self.hidden_state_num, CLASS_NUM, TIME_STEPS, FEATURE_NUM, self.layer_num)
         self.train_model(model)
 
 if __name__ == "__main__":
-    tm_500_2 = Train_Model(hidden_state=500, num_layers=2)
+    tm_500_2 = Train_Model(hidden_state_num=500, layer_num=2)
     tm_500_2.main()

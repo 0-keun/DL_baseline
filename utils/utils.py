@@ -1,13 +1,3 @@
-import numpy as np
-import pandas as pd
-from pandas import read_csv
-from sklearn.preprocessing import MinMaxScaler
-from keras.models import Sequential
-from keras.layers import LSTM, Dense, Dropout, Input
-import time
-import tensorflow as tf
-from csv_editor import define_DATA_NAMES
-from tensorflow.keras.utils import to_categorical
 import matplotlib.pyplot as plt
 
 
