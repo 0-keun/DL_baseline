@@ -61,10 +61,8 @@ class Train_Model:
             verbose=1
         )
 
-        training_loss_file_name = name_time(default_name='training_loss', ext='.png')
-        training_accuracy_file_name = name_time(default_name='training_accuracy', ext='.png')
-        save_loss_plot(history,loss_filepath=training_loss_file_name)
-        save_acc_plot(history,acc_filepath=training_accuracy_file_name)
+        save_loss_plot(history,loss_filepath='training_loss.png',time_flag=True)
+        save_acc_plot(history,acc_filepath='training_accuracy.png',time_flag=True)
         
         model.save(self.model_name)
 
