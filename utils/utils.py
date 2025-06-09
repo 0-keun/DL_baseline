@@ -1,6 +1,18 @@
 import matplotlib.pyplot as plt
 from datetime import datetime
 
+from types import SimpleNamespace
+import json
+
+##########################################
+##                 json                 ##
+##########################################
+def load_json(file_name):
+    with open(file_name, 'r') as f:
+        data = json.load(f)
+        data = SimpleNamespace(**data)
+
+    return data
 
 ##########################################
 ##                 PLOT                 ##
