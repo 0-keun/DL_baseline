@@ -140,7 +140,7 @@ def name_time(default_name,ext=None):
         name = default_name+'_'+time_str
     else:
         now = datetime.now()
-        time_str = now.strftime('%y%m%d')
+        time_str = now.strftime('%H%M%S')
         name = default_name+'_'+time_str+ext
     
     return name
