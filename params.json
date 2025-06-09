@@ -8,8 +8,8 @@
         "sw_p1","sw_p2","sw_p3","sw_p4","cond_p1","cond_p2","cond_p3","cond_p4",
         "sw_s1","sw_s2","sw_s3","sw_s4","cond_s1","cond_s2","cond_s3","cond_s4","core_t1"
     ],
-    "train_data_dir": "./dataset/train_dataset_PLECS.csv",
+    "train_data_dir": "./dataset/2506070803_dataset.csv",
     "test_data_dir": "./dataset/test_dataset_PLECS.csv",
-    "epochs": 10,
+    "epochs": 100,
     "batch_size": 64
 }

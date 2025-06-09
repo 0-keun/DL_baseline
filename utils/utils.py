@@ -4,6 +4,8 @@ from datetime import datetime
 from types import SimpleNamespace
 import json
 
+import os
+
 ##########################################
 ##                 json                 ##
 ##########################################
@@ -28,6 +30,11 @@ def save_loss_plot(history, loss_filepath='loss.png', time_flag=False):
     """
     if not time_flag:
         # Plot training & validation loss
+        dirname = './graph/'
+        if not os.path.exists(dirname):
+            os.makedirs(dirname, exist_ok=True)
+        loss_filepath = dirname+loss_filepath
+
         plt.figure()
         plt.plot(history.history['loss'], label='train loss')
         if 'val_loss' in history.history:
@@ -42,8 +49,11 @@ def save_loss_plot(history, loss_filepath='loss.png', time_flag=False):
 
     else:
         # Plot training & validation loss
+        dirname = name_date('./graph')
+        if not os.path.exists(dirname):
+            os.makedirs(dirname, exist_ok=True)
         name, ext = loss_filepath.split('.')
-        loss_filepath = name_time(name)+"."+ext
+        loss_filepath = dirname+'/'+name_time(name)+"."+ext
 
         plt.figure()
         plt.plot(history.history['loss'], label='train loss')
@@ -68,6 +78,11 @@ def save_acc_plot(history, acc_filepath='accuracy.png', time_flag=False):
     if not time_flag:
         # Plot training & validation accuracy
         # try both 'accuracy' and 'acc' keys for compatibility
+        dirname = './graph/'
+        if not os.path.exists(dirname):
+            os.makedirs(dirname, exist_ok=True)
+        acc_filepath = dirname+acc_filepath
+
         acc_key = 'accuracy' if 'accuracy' in history.history else 'acc'
         val_acc_key = 'val_' + acc_key
         plt.figure()
@@ -84,8 +99,11 @@ def save_acc_plot(history, acc_filepath='accuracy.png', time_flag=False):
     
     else:
         # Plot training & validation loss
-        name, ext = loss_filepath.split('.')
-        loss_filepath = name_time(name)+"."+ext
+        dirname = name_date('./graph')
+        if not os.path.exists(dirname):
+            os.makedirs(dirname, exist_ok=True)
+        name, ext = acc_filepath.split('.')
+        acc_filepath = dirname+'/'+name_time(name)+"."+ext
 
         # Plot training & validation accuracy
         # try both 'accuracy' and 'acc' keys for compatibility

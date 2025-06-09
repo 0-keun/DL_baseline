@@ -12,8 +12,8 @@ from utils.utils import load_json, save_acc_plot, save_loss_plot, name_date, nam
 
 MODEL_DIR = './model/'+name_date(default_name='model')+'/'
 
-df = pd.read_csv('./PLECS/dataset_250607/2506070803_dataset.csv')
 p = load_json('./params.json')
+df = pd.read_csv(p.train_data_dir)
 
 X = df[p.feature_list].values 
 y = df[p.output_list].values  
@@ -21,18 +21,17 @@ y = df[p.output_list].values
 scaler = normalizae_and_save(X)
 X = scaler.transform(X)
 
-model = FFNN_model(feature_num=X.shape[1],output_num=17)
+model = FFNN_model(feature_num=len(p.feature_list), output_num=len(p.output_list))
 
 # --- 5. 모델 학습 ---
 history = model.fit(
     X, y,
-    epochs=1000,
-    batch_size=64,
+    epochs=p.epochs,
+    batch_size=p.batch_size,
     validation_split=0.2
 )
 
-save_loss_plot(history=history,time_flag=True)
-save_acc_plot(history=history,time_flag=True)
+save_loss_plot(history=history,loss_filepath='loss.png',time_flag=True)
 
 # --- 7. 모델 저장 ---
 model_name = name_time('DNN_DAB_est','.h5')
