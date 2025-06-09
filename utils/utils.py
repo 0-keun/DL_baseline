@@ -49,7 +49,7 @@ def save_loss_plot(history, loss_filepath='loss.png', time_flag=False):
 
     else:
         # Plot training & validation loss
-        dirname = name_date('./graph')
+        dirname = './graph/'+name_date('./graph')
         if not os.path.exists(dirname):
             os.makedirs(dirname, exist_ok=True)
         name, ext = loss_filepath.split('.')
@@ -99,7 +99,7 @@ def save_acc_plot(history, acc_filepath='accuracy.png', time_flag=False):
     
     else:
         # Plot training & validation loss
-        dirname = name_date('./graph')
+        dirname = './graph/'+name_date('./graph')
         if not os.path.exists(dirname):
             os.makedirs(dirname, exist_ok=True)
         name, ext = acc_filepath.split('.')
