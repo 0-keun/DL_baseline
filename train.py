@@ -1,77 +1,42 @@
-import numpy as np
 import pandas as pd
-from pandas import read_csv
-from sklearn.preprocessing import MinMaxScaler
-import time
-import tensorflow as tf
-from utils.data_processing import load_serial_data_from_csv
-from utils.utils import save_loss_plot, save_acc_plot, name_date, name_time
-from utils.models import LSTM_model
+import numpy as np
+import os
+from sklearn.preprocessing import StandardScaler
+from tensorflow.keras import Sequential
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.callbacks import EarlyStopping
+from datetime import date, datetime
+from utils.data_processing import normalizae_and_save
+from utils.models import FFNN_model
+from utils.utils import load_json, save_acc_plot, save_loss_plot, name_date, name_time
 
-# 멀티-GPU 전략
-strategy = tf.distribute.MirroredStrategy()
+MODEL_DIR = './model/'+name_date(default_name='model')+'/'
 
-from tensorflow.keras.mixed_precision import set_global_policy
-set_global_policy("float32")
+df = pd.read_csv('./PLECS/dataset_250607/2506070803_dataset.csv')
+p = load_json('./params.json')
 
+X = df[p.feature_list].values 
+y = df[p.output_list].values  
 
-############################
-##       get params       ##
-############################
+scaler = normalizae_and_save(X)
+X = scaler.transform(X)
 
-import json
+model = FFNN_model(feature_num=X.shape[1],output_num=17)
 
-with open('./params.json', 'r') as f:
-    params = json.load(f)
+# --- 5. 모델 학습 ---
+history = model.fit(
+    X, y,
+    epochs=1000,
+    batch_size=64,
+    validation_split=0.2
+)
 
-TIME_STEPS = params["time_steps"]
-BULK_SIZE = params["bulk_size"]
-TRAIN_DATA_DIR = params["train_data_dir"]
-EPOCHS        = params["epochs"]
-BATCH_SIZE    = params["batch_size"]
-FEATURE_LIST = params["feature_list"]
-CLASSES_LIST = params["classes_list"]
-CLASS_NUM = len(CLASSES_LIST)+1
-FEATURE_NUM = len(FEATURE_LIST)
+save_loss_plot(history=history,time_flag=True)
+save_acc_plot(history=history,time_flag=True)
 
-MODEL_DIR = name_date(default_name='model')
-
-
-############################
-##       Model setup      ##
-############################
-
-class Train_Model:
-    def __init__(self, hidden_state_num, layer_num):
-        # 하이퍼파라미터
-        self.hidden_state_num = hidden_state_num
-        self.layer_num = layer_num
-        model_name = name_time(default_name=f'LSTM_h{hidden_state_num}_layer{layer_num}_class{CLASS_NUM}', ext='.h5')
-        self.model_name = (f'./model/{MODEL_DIR}/{model_name}')
-
-        # 데이터 로드
-        self.X_input, self.y_output = load_serial_data_from_csv(TRAIN_DATA_DIR,FEATURE_LIST,CLASSES_LIST,BULK_SIZE,TIME_STEPS)
-
-    def train_model(self, model):
-        start_time = time.time()
-        history = model.fit(
-            self.X_input, self.y_output,
-            epochs=EPOCHS,
-            batch_size=BATCH_SIZE,
-            verbose=1
-        )
-
-        training_loss_file_name = name_time(default_name='training_loss', ext='.png')
-        training_accuracy_file_name = name_time(default_name='training_accuracy', ext='.png')
-        save_loss_plot(history,loss_filepath=training_loss_file_name)
-        save_acc_plot(history,acc_filepath=training_accuracy_file_name)
-        
-        model.save(self.model_name)
-
-    def main(self):
-        model = LSTM_model(self.hidden_state_num, CLASS_NUM, TIME_STEPS, FEATURE_NUM, self.layer_num)
-        self.train_model(model)
-
-if __name__ == "__main__":
-    tm_500_2 = Train_Model(hidden_state_num=500, layer_num=2)
-    tm_500_2.main()
+# --- 7. 모델 저장 ---
+model_name = name_time('DNN_DAB_est','.h5')
+os.makedirs(MODEL_DIR, exist_ok=True)
+model_path = os.path.join(MODEL_DIR, model_name)
+model.save(model_path)
+print(f"Saved model to {model_path}")

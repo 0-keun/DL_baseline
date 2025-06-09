@@ -96,3 +96,20 @@ def RNN_model(hidden_state_num, class_num, time_steps, feature_num, layer_num):
                 metrics=['accuracy']
             )
         return model
+    
+def FFNN_model(feature_num, output_num):
+    with strategy.scope():
+        model = Sequential()
+        model.add(Input(shape=(feature_num,)))   
+        model.add(Dense(128, activation='relu'))
+        model.add(Dense(64, activation='relu'))
+        model.add(Dense(32, activation='relu'))  
+        model.add(Dense(output_num, activation='linear'))  
+
+        model.compile(
+            optimizer='adam',
+            loss='mse',
+            metrics=['mae']
+        )
+        # es = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
+    return model

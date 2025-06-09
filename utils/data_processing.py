@@ -1,6 +1,9 @@
 from pandas import read_csv
 import numpy as np
 from tensorflow.keras.utils import to_categorical
+import os
+from sklearn.preprocessing import StandardScaler
+from utils.utils import name_date, name_time
 
 ##########################################
 ##             NORMALIZATION            ##
@@ -42,6 +45,19 @@ def instance_normalize(insatnce: np.ndarray,
     
     return insatnce_norm
 
+def normalizae_and_save(data):
+    scaler = StandardScaler()
+    trans_data = scaler.fit_transform(data)
+
+    save_dir = name_date(default_name='./scaler')
+    mean_name = save_dir+'/'+name_time(default_name='mean',ext='.npy')
+    scale_name = save_dir+'/'+name_time(default_name='scale',ext='.npy')
+
+    os.makedirs(save_dir, exist_ok=True)
+    np.save(mean_name, scaler.mean_)
+    np.save(scale_name, scaler.scale_)
+
+    return scaler
 
 ##########################################
 ##           csv to np.array            ##
