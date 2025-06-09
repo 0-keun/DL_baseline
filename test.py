@@ -30,17 +30,18 @@ def get_params(filename):
     stem = Path(filename).stem      # → 'LSTM_h10_layer3'
 
     # 2) 정규표현식 패턴
-    pattern = r'LSTM_h(\d+)_layer(\d+)\_9class.h5$'
+    pattern = r'LSTM_h(\d+)_layer(\d+)\_class(\d+).h5$'
 
     m = re.search(pattern, filename)
     if m:
         num1 = int(m.group(1))   # h 뒤 숫자
         num2 = int(m.group(2))   # layer 뒤 숫자
-        return num1, num2
+        num3 = int(m.group(3))
+        return num1, num2, num3
 
 class Tester():
     def __init__(self, model_name):
-        self.hidden_state, self.num_layer = get_params(model_name)
+        self.hidden_state, self.num_layer, _ = get_params(model_name)
 
         self.X_input, self.y_output = load_serial_data_from_csv(TEST_DATA_DIR,FEATURE_LIST,CLASSES_LIST,BULK_SIZE,TIME_STEPS)
         self.model = load_model(model_name)
@@ -75,9 +76,6 @@ class Tester():
         # # 실행 시간 출력
         # execution_time = end_time - start_time
         # print("The prediction took", execution_time, "seconds to complete")
-
-
-
 
 test_500_2 = Tester('./model/LSTM_h500_layer2_9class'+'.h5')
 

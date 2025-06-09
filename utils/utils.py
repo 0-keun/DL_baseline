@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+from datetime import datetime
 
 
 ##########################################
@@ -49,3 +50,27 @@ def save_acc_plot(history, acc_filepath='accuracy.png'):
     plt.grid(True)
     plt.savefig(acc_filepath, dpi=150, bbox_inches='tight')
     plt.close()
+
+def name_date(default_name,ext=None):
+    if ext == None:
+        now = datetime.now()
+        time_str = now.strftime('%y%m%d')
+        name = default_name+'_'+time_str
+    else:
+        now = datetime.now()
+        time_str = now.strftime('%y%m%d')
+        name = default_name+'_'+time_str+ext
+
+    return name
+
+def name_time(default_name,ext=None):
+    if ext == None:
+        now = datetime.now()
+        time_str = now.strftime('%H%M%S')
+        name = default_name+'_'+time_str
+    else:
+        now = datetime.now()
+        time_str = now.strftime('%y%m%d')
+        name = default_name+'_'+time_str+ext
+    
+    return name
