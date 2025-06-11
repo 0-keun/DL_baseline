@@ -1,6 +1,10 @@
 from pandas import read_csv
+import pandas as pd
 import numpy as np
 from tensorflow.keras.utils import to_categorical
+import os
+from sklearn.preprocessing import StandardScaler
+from utils.utils import name_date, name_time
 
 ##########################################
 ##             NORMALIZATION            ##
@@ -42,6 +46,49 @@ def instance_normalize(insatnce: np.ndarray,
     
     return insatnce_norm
 
+def normalize_and_save(data):
+    scaler = StandardScaler()
+    trans_data = scaler.fit_transform(data)
+
+    dirname = './scaler/'+name_date('scaler')
+    if not os.path.exists(dirname):
+        os.makedirs(dirname, exist_ok=True)
+
+    mean_name = dirname+'/'+name_time(default_name='mean',ext='.npy')
+    scale_name = dirname+'/'+name_time(default_name='scale',ext='.npy')
+    std_name = dirname+'/'+name_time(default_name='std',ext='.npy')
+    np.save(mean_name, scaler.mean_)
+    np.save(scale_name, scaler.scale_)
+
+    return scaler
+
+def load_and_normalize(data,mean_file,std_file):
+    mean = np.load(mean_file)
+    std = np.load(std_file)
+
+    return (data - mean) / std
+
+##########################################
+##            define output             ##
+##########################################
+
+def add_normal_class(labels_2d):
+    """
+    labels_2d: (batch, num_classes)
+    return: (batch, num_classes + 1)
+    """
+    batch, num_classes = labels_2d.shape
+    # 마지막 차원 1개 확장
+    new_labels = np.zeros((batch, num_classes + 1), dtype=labels_2d.dtype)
+    # 기존 값 복사
+    new_labels[..., :num_classes] = labels_2d
+
+    # 모두 0인 경우 normal state 인덱스에 1
+    mask = np.all(labels_2d == 0, axis=-1)   # (batch, time_steps)
+    new_labels[mask, num_classes] = 1        # num_classes == 마지막 인덱스
+
+    return new_labels
+
 
 ##########################################
 ##           csv to np.array            ##
@@ -74,13 +121,107 @@ def load_serial_data_from_csv(input_file,feature_list,classes_list,bulk_size,tim
     X_input = np.array(Xs)
     y_output = np.array(Ys)
 
-    # 각 시퀀스별 정규화
-    norm_data = [instance_normalize(instance, method="minmax") for instance in X_input]
-    X_input = np.array(norm_data)
+    # # 각 시퀀스별 정규화
+    # norm_data = [instance_normalize(instance, method="minmax") for instance in X_input]
+    # X_input = np.array(norm_data)
 
-    list = [0]*(len(classes_list)+1)
-    for output in y_output:
-        list += output
-    print("sample distribution by class:", list)
+    # list = [0]*(len(classes_list)+1)
+    # for output in y_output:
+    #     list += output
+    # print("sample distribution by class:", list)
 
     return X_input, y_output
+
+def load_features_data_from_csv(input_file,feature_list):
+    '''
+    This function return a ndarray including values of features
+    '''
+    df = read_csv(input_file, index_col=None)
+    data = df[feature_list].values
+
+    return(data)
+
+def load_classes_data_from_csv(input_file,classes_list):
+    '''
+    This function return a ndarray including values of classes
+    '''
+    df = read_csv(input_file, index_col=None)
+    data = df[classes_list].values
+
+    return(data)
+
+def read_all_csv_to_np_list(dir_path,feature_list,classes_list,dim_reduction=False):
+    features_list = []
+    class_list = []
+
+    if not dim_reduction:
+        for fname in os.listdir(dir_path):
+            if fname.endswith('.csv'):
+                file_path = os.path.join(dir_path, fname)
+                features = df[feature_list].values
+                classes = df[classes_list].values
+                features_list.append(features)
+                class_list.append(classes)
+    else:
+        for fname in os.listdir(dir_path):
+            if fname.endswith('.csv'):
+                file_path = os.path.join(dir_path, fname)
+                df = pd.read_csv(file_path)
+
+                features = df[feature_list].values  
+                classes = df[classes_list].values
+                for row in features:
+                    features_list.append(row)
+                for row in classes:
+                    class_list.append(row)
+                # data_list.append(data)
+    
+    return features_list, class_list
+
+def make_sequence_dataset(dir_path, time_steps, feature_list, classes_list, scaler=None):
+    X_list = []   # feature 시퀀스 리스트
+    y_list = []   # class(레이블) 시퀀스 리스트
+
+    if scaler == None:
+        for fname in os.listdir(dir_path):
+            if fname.endswith('.csv'):
+                file_path = os.path.join(dir_path, fname)
+                df = pd.read_csv(file_path)
+                
+                features = df[feature_list].values  # (N, F)
+                classes = df[classes_list].values   # (N, C) 또는 (N,) 형태
+                
+                N = len(df)
+                for i in range(N - time_steps):
+                    X_seq = features[i:i+time_steps]     # (time_steps, F)
+                    y_seq = classes[i+time_steps-1]      # (time_steps, C) 또는 (time_steps,)
+                                        
+                    X_list.append(X_seq)
+                    y_list.append(y_seq)
+        
+        X = np.array(X_list)   # (전체시퀀스수, time_steps, F)
+        y = np.array(y_list)   # (전체시퀀스수, time_steps, C) 또는 (전체시퀀스수, time_steps)
+
+    else:
+        for fname in os.listdir(dir_path):
+            if fname.endswith('.csv'):
+                file_path = os.path.join(dir_path, fname)
+                df = pd.read_csv(file_path)
+                
+                features = df[feature_list].values  # (N, F)
+                classes = df[classes_list].values   # (N, C) 또는 (N,) 형태
+                
+                N = len(df)
+                for i in range(N - time_steps):
+                    X_seq = features[i:i+time_steps]     # (time_steps, F)
+                    y_seq = classes[i+time_steps]      # (time_steps, C) 또는 (time_steps,)
+
+                    trans_X_seq = scaler.transform(X_seq)
+                    
+                    X_list.append(trans_X_seq)
+                    y_list.append(y_seq)
+        
+        X = np.array(X_list)   # (전체시퀀스수, time_steps, F)
+        y = np.array(y_list)   # (전체시퀀스수, time_steps, C) 또는 (전체시퀀스수, time_steps)
+
+    return X, y

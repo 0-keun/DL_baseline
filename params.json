@@ -16,8 +16,8 @@
         "open2:Output",
         "open4:Output"
     ],
-    "train_data_dir": "./dataset/train_dataset_PLECS.csv",
-    "test_data_dir": "./dataset/test_dataset_PLECS.csv",
-    "epochs": 10,
+    "train_data_dir": "./dataset/dataset_train_250610",
+    "test_data_dir": "./dataset/dataset_test_250610",
+    "epochs": 100,
     "batch_size": 64
 }

@@ -2,8 +2,9 @@ import numpy as np
 import pandas as pd
 from pandas import read_csv
 from sklearn.preprocessing import MinMaxScaler
-from keras.models import Sequential
-from keras.layers import LSTM, RNN, Dense, Dropout, Input, layers, Model
+from keras.models import Sequential, Model
+from keras.layers import LSTM, RNN, Dense, Dropout, Input
+from keras import layers
 import time
 import tensorflow as tf
 

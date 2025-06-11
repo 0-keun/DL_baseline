@@ -5,24 +5,17 @@ from sklearn.preprocessing import MinMaxScaler
 from keras.models import load_model
 import time
 import re
-from utils.data_processing import load_serial_data_from_csv
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+from utils.data_processing import load_serial_data_from_csv,make_sequence_dataset, add_normal_class, load_and_normalize
+from utils.utils import load_json, get_confusion_mat
+from sklearn.metrics import accuracy_score, classification_report
 from tensorflow.keras.utils import to_categorical
 
 import json
 
-with open('./params/params.json', 'r') as f:
+with open('./params.json', 'r') as f:
     params = json.load(f)
 
-TIME_STEPS = params["time_steps"]
-BULK_SIZE = params["bulk_size"]
-TEST_DATA_DIR = params["test_data_dir"]
-EPOCHS        = params["epochs"]
-BATCH_SIZE    = params["batch_size"]
-FEATURE_LIST = params["feature_list"]
-CLASSES_LIST = params["classes_list"]
-CLASS_NUM = len(CLASSES_LIST)+1
-FEATURE_NUM = len(FEATURE_LIST)
+p = load_json()
 
 def get_params(filename):
     # 1) basename만 뽑아내고 싶으면 pathlib 사용
@@ -30,7 +23,7 @@ def get_params(filename):
     stem = Path(filename).stem      # → 'LSTM_h10_layer3'
 
     # 2) 정규표현식 패턴
-    pattern = r'LSTM_h(\d+)_layer(\d+)\_class(\d+).h5$'
+    pattern = r'LSTM_h(\d+)_layer(\d+)\_class(\d+)_(\d+).h5$'
 
     m = re.search(pattern, filename)
     if m:
@@ -41,18 +34,16 @@ def get_params(filename):
 
 class Tester():
     def __init__(self, model_name):
-        self.hidden_state, self.num_layer, _ = get_params(model_name)
-
-        self.X_input, self.y_output = load_serial_data_from_csv(TEST_DATA_DIR,FEATURE_LIST,CLASSES_LIST,BULK_SIZE,TIME_STEPS)
         self.model = load_model(model_name)
-    
-    def get_confusion_mat(self, y_true, y_pred):
-        # 혼동 행렬
-        cm=confusion_matrix(y_true, y_pred)
-        # print("\nConfusion Matrix:")
-        # print(cm)
-        txt_name = "./confusion_matrix/confusion_matrix"+str(self.hidden_state)+"_"+str(self.num_layer)+".csv"
-        np.savetxt(txt_name, cm, fmt='%d', delimiter=',')
+        self.hidden_state, self.num_layer, _ = get_params(model_name)
+        self.X_input, self.y_output = make_sequence_dataset(p.test_data_dir,p.time_steps,p.feature_list,p.classes_list)
+        self.X_input = load_and_normalize(self.X_input,'./scaler/scaler_250610/mean_180723.npy','./scaler/scaler_250610/scale_180723.npy')
+        self.y_output = add_normal_class(self.y_output)
+
+        list = [0]*(len(p.classes_list)+1)
+        for output in self.y_output:
+            list += output
+        print("sample distribution by class:", list)  
 
     def main(self):
         # 예측 수행
@@ -71,12 +62,12 @@ class Tester():
         # print(classification_report(y_true_classes, y_pred_classes))
 
         # 혼동 행렬
-        self.get_confusion_mat(y_true_classes, y_pred_classes)
+        get_confusion_mat(y_true_classes, y_pred_classes,time_flag=True)
 
         # # 실행 시간 출력
         # execution_time = end_time - start_time
         # print("The prediction took", execution_time, "seconds to complete")
 
-test_500_2 = Tester('./model/LSTM_h500_layer2_9class'+'.h5')
+test_500_3 = Tester('./model/model_250610/LSTM_h500_layer3_class9_230620'+'.h5')
 
-test_500_2.main()
+test_500_3.main()
