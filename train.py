@@ -5,7 +5,7 @@ from sklearn.preprocessing import MinMaxScaler
 import time
 import tensorflow as tf
 from utils.data_processing import load_serial_data_from_csv, normalize_and_save, add_normal_class, read_all_csv_to_np_list, make_sequence_dataset, load_and_normalize
-from utils.utils import save_loss_plot, save_acc_plot, name_date, name_time, load_json
+from utils.utils import save_loss_plot, save_acc_plot, name_to_dir, name_time, load_json
 from utils.models import LSTM_model, transformer_model
 
 from tensorflow.keras.mixed_precision import set_global_policy
@@ -23,7 +23,7 @@ with open('./params.json', 'r') as f:
 
 p = load_json()
 
-MODEL_DIR = name_date(default_name='model')
+MODEL_DIR = name_to_dir(default_name='model')
 SAVE_NORMALIZATION_FILE = False
 
 if not SAVE_NORMALIZATION_FILE:
@@ -43,15 +43,14 @@ class Train_Model:
         # 하이퍼파라미터
         self.hidden_state_num = hidden_state_num
         self.layer_num = layer_num
-        model_name = name_time(default_name=f'LSTM_h{hidden_state_num}_layer{layer_num}_class{len(p.classes_list)+1}', ext='.h5')
-        self.model_name = (f'./model/{MODEL_DIR}/{model_name}')
+        model_name = name_time(default_name=f'LSTM_h{hidden_state_num}_layer{layer_num}_class{len(p.classes_list)+1}.h5')
+        self.model_filepath = MODEL_DIR+model_name
 
         # 데이터 로드
         self.X_input, self.y_output = make_sequence_dataset(p.train_data_dir,p.time_steps,p.feature_list,p.classes_list,scaler)
         self.y_output = add_normal_class(self.y_output)
 
     def train_model(self, model):
-        start_time = time.time()
         history = model.fit(
             self.X_input, self.y_output,
             epochs=p.epochs,
@@ -59,10 +58,10 @@ class Train_Model:
             verbose=1
         )
 
-        save_loss_plot(history,loss_filename='training_loss',time_flag=True)
-        save_acc_plot(history,acc_filename='training_accuracy',time_flag=True)
+        save_loss_plot(history,loss_filename='training_loss.png',time_flag=True)
+        save_acc_plot(history,acc_filename='training_accuracy.png',time_flag=True)
         
-        model.save(self.model_name)
+        model.save(self.model_filepath)
 
     def train_model_transformer(self, model):
         history = model.fit(
@@ -71,10 +70,10 @@ class Train_Model:
             batch_size=p.batch_size,
             verbose=1
         )
-        save_loss_plot(history,loss_filepath='training_loss',time_flag=True)
-        save_acc_plot(history,acc_filepath='training_accuracy',time_flag=True)
+        save_loss_plot(history,loss_filepath='training_loss.png',time_flag=True)
+        save_acc_plot(history,acc_filepath='training_accuracy.png',time_flag=True)
         
-        model.save(self.model_name)
+        model.save(self.model_filepath)
 
     def main(self):
         model = LSTM_model(self.hidden_state_num, len(p.classes_list)+1, p.time_steps, len(p.feature_list), self.layer_num)

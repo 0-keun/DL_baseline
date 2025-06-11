@@ -4,7 +4,7 @@ import numpy as np
 from tensorflow.keras.utils import to_categorical
 import os
 from sklearn.preprocessing import StandardScaler
-from utils.utils import name_date, name_time
+from utils.utils import name_date, name_time, name_to_dir
 
 ##########################################
 ##             NORMALIZATION            ##
@@ -50,13 +50,11 @@ def normalize_and_save(data):
     scaler = StandardScaler()
     trans_data = scaler.fit_transform(data)
 
-    dirname = './scaler/'+name_date('scaler')
-    if not os.path.exists(dirname):
-        os.makedirs(dirname, exist_ok=True)
+    dirname = name_to_dir(name='scaler')
 
-    mean_name = dirname+'/'+name_time(default_name='mean',ext='.npy')
-    scale_name = dirname+'/'+name_time(default_name='scale',ext='.npy')
-    std_name = dirname+'/'+name_time(default_name='std',ext='.npy')
+    mean_name = dirname+name_time(default_name='mean.npy')
+    scale_name = dirname+name_time(default_name='scale.npy')
+    
     np.save(mean_name, scaler.mean_)
     np.save(scale_name, scaler.scale_)
 
