@@ -4,7 +4,7 @@ from pandas import read_csv
 from sklearn.preprocessing import MinMaxScaler
 import time
 import tensorflow as tf
-from utils.data_processing import load_serial_data_from_csv, normalize_and_save, add_normal_class, read_all_csv_to_np_list, make_sequence_dataset, load_and_normalize
+from utils.data_processing import load_serial_data_from_csv, normalize_and_save, add_normal_class, read_all_csv_to_np_list, make_sequence_dataset, load_and_normalize, normalize_std_scaler
 from utils.utils import save_loss_plot, save_acc_plot, name_to_dir, name_time, load_json
 from utils.models import LSTM_model, transformer_model
 
@@ -23,15 +23,8 @@ with open('./params.json', 'r') as f:
 
 p = load_json()
 
-MODEL_DIR = name_to_dir(default_name='model')
-SAVE_NORMALIZATION_FILE = False
-
-if not SAVE_NORMALIZATION_FILE:
-    features_data, _ = read_all_csv_to_np_list('./dataset/dataset_normal_250610',p.feature_list,p.classes_list,dim_reduction=True)
-    scaler = normalize_and_save(np.squeeze(features_data))
-else:
-    mean = np.load('norm_stats_mean.npy')
-    scale = np.load('norm_stats_std.npy') 
+MODEL_DIR = name_to_dir(name='model',time_flag=True)
+SAVE_NORMALIZATION_FILE = True
 
 
 ############################
@@ -47,8 +40,19 @@ class Train_Model:
         self.model_filepath = MODEL_DIR+model_name
 
         # 데이터 로드
-        self.X_input, self.y_output = make_sequence_dataset(p.train_data_dir,p.time_steps,p.feature_list,p.classes_list,scaler)
+        self.X_input, self.y_output = make_sequence_dataset(p.train_data_dir,p.time_steps,p.feature_list,p.classes_list)
+        if not SAVE_NORMALIZATION_FILE:
+            features_data, _ = read_all_csv_to_np_list('./dataset/dataset_normal_250610',p.feature_list,p.classes_list,dim_reduction=True)
+            scaler = normalize_and_save(np.squeeze(features_data),time_flag=True)
+            self.X_input = normalize_std_scaler(self.X_input, scaler)
+        else:
+            self.X_input = load_and_normalize(self.X_input,'./scaler/scaler_250610/mean_180723.npy','./scaler/scaler_250610/scale_180723.npy')
         self.y_output = add_normal_class(self.y_output)
+
+        list = [0]*(len(p.classes_list)+1)
+        for output in self.y_output:
+            list += output
+        print("sample distribution by class:", list)  
 
     def train_model(self, model):
         history = model.fit(

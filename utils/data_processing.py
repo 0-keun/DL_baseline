@@ -46,11 +46,11 @@ def instance_normalize(insatnce: np.ndarray,
     
     return insatnce_norm
 
-def normalize_and_save(data):
+def normalize_and_save(data,time_flag=False):
     scaler = StandardScaler()
     trans_data = scaler.fit_transform(data)
 
-    dirname = name_to_dir(name='scaler')
+    dirname = name_to_dir(name='scaler',time_flag=time_flag)
 
     mean_name = dirname+name_time(default_name='mean.npy')
     scale_name = dirname+name_time(default_name='scale.npy')
@@ -59,6 +59,12 @@ def normalize_and_save(data):
     np.save(scale_name, scaler.scale_)
 
     return scaler
+
+def normalize_std_scaler(data,scaler):
+    mean = scaler.mean_
+    std = scaler.scale_
+
+    return (data - mean) / std
 
 def load_and_normalize(data,mean_file,std_file):
     mean = np.load(mean_file)

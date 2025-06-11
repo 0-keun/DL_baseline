@@ -37,7 +37,7 @@ class Tester():
         self.model = load_model(model_name)
         self.hidden_state, self.num_layer, _ = get_params(model_name)
         self.X_input, self.y_output = make_sequence_dataset(p.test_data_dir,p.time_steps,p.feature_list,p.classes_list)
-        self.X_input = load_and_normalize(self.X_input,'./scaler/scaler_250610/mean_180723.npy','./scaler/scaler_250610/scale_180723.npy')
+        self.X_input = load_and_normalize(self.X_input,'./scaler/mean_135845.npy','./scaler/scale_135845.npy')
         self.y_output = add_normal_class(self.y_output)
 
         list = [0]*(len(p.classes_list)+1)
@@ -68,6 +68,6 @@ class Tester():
         # execution_time = end_time - start_time
         # print("The prediction took", execution_time, "seconds to complete")
 
-test_500_3 = Tester('./model/model_250610/LSTM_h500_layer3_class9_230620'+'.h5')
+test_500_3 = Tester('./model/model_250611/LSTM_h500_layer3_class9_140832.h5')
 
 test_500_3.main()
