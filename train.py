@@ -84,5 +84,5 @@ class Train_Model:
         self.train_model(model)
 
 if __name__ == "__main__":
-    tm_500_3 = Train_Model(hidden_state_num=500, layer_num=3)
+    tm_500_3 = Train_Model(hidden_state_num=256, layer_num=4)
     tm_500_3.main()

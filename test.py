@@ -68,6 +68,6 @@ class Tester():
         # execution_time = end_time - start_time
         # print("The prediction took", execution_time, "seconds to complete")
 
-test_500_3 = Tester('./model/model_250611/LSTM_h500_layer3_class9_140832.h5')
+test_500_3 = Tester('./model/model_250612/LSTM_h500_layer3_class9_161938.h5')
 
 test_500_3.main()
