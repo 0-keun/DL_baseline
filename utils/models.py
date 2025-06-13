@@ -101,9 +101,9 @@ def FFNN_model(feature_num, output_num):
     with strategy.scope():
         model = Sequential()
         model.add(Input(shape=(feature_num,)))   
+        model.add(Dense(256, activation='relu'))
         model.add(Dense(128, activation='relu'))
-        model.add(Dense(64, activation='relu'))
-        model.add(Dense(32, activation='relu'))  
+        model.add(Dense(64, activation='relu'))  
         model.add(Dense(output_num, activation='linear'))  
 
         model.compile(

@@ -61,16 +61,18 @@ def normalize_and_save(data,time_flag=False):
     return scaler
 
 def normalize_std_scaler(data,scaler):
-    mean = scaler.mean_
-    std = scaler.scale_
+    data = scaler.transform(data)
 
-    return (data - mean) / std
+    return data
 
 def load_and_normalize(data,mean_file,std_file):
-    mean = np.load(mean_file)
-    std = np.load(std_file)
+    scaler = StandardScaler()
+    scaler.mean_ = np.load(mean_file)
+    scaler.scale_ = np.load(std_file)
 
-    return (data - mean) / std
+    data = scaler.transform(data)
+
+    return data
 
 ##########################################
 ##            define output             ##
