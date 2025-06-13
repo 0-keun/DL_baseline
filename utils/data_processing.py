@@ -145,6 +145,15 @@ def load_features_data_from_csv(input_file,feature_list):
 
     return(data)
 
+def load_labels_data_from_csv(input_file,feature_list):
+    '''
+    This function return a ndarray including values of features
+    '''
+    df = read_csv(input_file, index_col=None)
+    data = df[feature_list].values
+
+    return(data)
+
 def load_classes_data_from_csv(input_file,classes_list):
     '''
     This function return a ndarray including values of classes

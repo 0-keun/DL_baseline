@@ -1,0 +1,17 @@
+{
+    "time_steps": 150,
+    "bulk_size": 200,
+    "feature_list": [
+        "Vo:Measured voltage",
+        "IL:Measured current",
+        "Vin:Measured voltage"
+    ],
+    "classes_list": [
+        "OPEN",
+        "SHORT"
+    ],
+    "train_data_dir": "./dataset/dataset_train_250610",
+    "test_data_dir": "./dataset/dataset_test_250610",
+    "epochs": 100,
+    "batch_size": 64
+}

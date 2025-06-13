@@ -18,7 +18,7 @@ set_global_policy("float32")
 
 import json
 
-with open('./params.json', 'r') as f:
+with open('./params_3F.json', 'r') as f:
     params = json.load(f)
 
 p = load_json()
