@@ -102,8 +102,8 @@ def FFNN_model(feature_num, output_num):
         model = Sequential()
         model.add(Input(shape=(feature_num,)))   
         model.add(Dense(256, activation='relu'))
-        model.add(Dense(128, activation='relu'))
-        model.add(Dense(64, activation='relu'))  
+        model.add(Dense(512, activation='relu'))
+        model.add(Dense(256, activation='relu'))  
         model.add(Dense(output_num, activation='linear'))  
 
         model.compile(
@@ -113,3 +113,4 @@ def FFNN_model(feature_num, output_num):
         )
         # es = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
     return model
+

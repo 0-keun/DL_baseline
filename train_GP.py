@@ -64,6 +64,8 @@ def train_step(x, y):
 # 훈련 루프
 for epoch in range(p.epochs):
     loss_value = train_step(X, y)
+    if epoch % 1000 == 0:
+        print('epoch:',epoch, ' ,loss:',loss_value)
 
 model_name = name_time('DNN_DAB_est.h5')
 os.makedirs(MODEL_DIR, exist_ok=True)

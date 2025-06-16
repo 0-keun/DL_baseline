@@ -77,6 +77,6 @@ class Tester():
         mean_percent_error = np.mean(percent_error)
         print(f"평균 Percent Error: {mean_percent_error:.2f}%")
 
-test = Tester('./model/model_250612/DNN_DAB_est_232651.h5')
+test = Tester('./model/model_250613/DNN_DAB_est_162956.h5')
 
 test.main()

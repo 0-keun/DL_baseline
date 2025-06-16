@@ -9,7 +9,7 @@
         "sw_s1","sw_s2","sw_s3","sw_s4","cond_s1","cond_s2","cond_s3","cond_s4"
     ],
     "train_data_dir": "./dataset/2506070803_dataset.csv",
-    "test_data_dir": "./dataset/dataset_ronp_OOD.csv",
-    "epochs": 1000,
+    "test_data_dir": "./dataset/dataset_test.csv",
+    "epochs": 100000,
     "batch_size": 64
 }
