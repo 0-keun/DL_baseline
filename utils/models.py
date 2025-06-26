@@ -7,9 +7,23 @@ from keras.layers import LSTM, RNN, Dense, Dropout, Input
 from keras import layers
 import time
 import tensorflow as tf
+import os
+from utils.utils import name_to_dir
 
 strategy = tf.distribute.MirroredStrategy() # to use multiple GPUs
 
+# 사용자 정의 콜백 클래스
+class SaveEveryNEpoch(tf.keras.callbacks.Callback):
+    def __init__(self, save_path, interval=100):
+        super(SaveEveryNEpoch, self).__init__()
+        self.save_path = save_path
+        self.interval = interval
+
+    def on_epoch_end(self, epoch, logs=None):
+        if (epoch + 1) % self.interval == 0:
+            model_path = os.path.join(self.save_path)
+            self.model.save(model_path)
+            print(f'\n✅ 모델이 {epoch+1}번째 epoch 후 저장되었습니다: {model_path}')
 
 ##############################
 ##           LSTM           ##

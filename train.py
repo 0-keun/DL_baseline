@@ -6,7 +6,7 @@ import time
 import tensorflow as tf
 from utils.data_processing import load_serial_data_from_csv, normalize_and_save, add_normal_class, read_all_csv_to_np_list, make_sequence_dataset, load_and_normalize, normalize_std_scaler
 from utils.utils import save_loss_plot, save_acc_plot, name_to_dir, name_time, load_json
-from utils.models import LSTM_model, transformer_model
+from utils.models import LSTM_model, transformer_model, SaveEveryNEpoch
 
 from tensorflow.keras.mixed_precision import set_global_policy
 set_global_policy("float32")
@@ -18,13 +18,10 @@ set_global_policy("float32")
 
 import json
 
-with open('./params_3F.json', 'r') as f:
-    params = json.load(f)
-
-p = load_json()
+p = load_json(file_name='./params_3F.json')
 
 MODEL_DIR = name_to_dir(name='model',time_flag=True)
-SAVE_NORMALIZATION_FILE = True
+SAVE_NORMALIZATION_FILE = False
 
 
 ############################
@@ -41,7 +38,7 @@ class Train_Model:
 
         # 데이터 로드
         self.X_input, self.y_output = make_sequence_dataset(p.train_data_dir,p.time_steps,p.feature_list,p.classes_list)
-        if not SAVE_NORMALIZATION_FILE:
+        if SAVE_NORMALIZATION_FILE:
             features_data, _ = read_all_csv_to_np_list('./dataset/dataset_normal_250610',p.feature_list,p.classes_list,dim_reduction=True)
             scaler = normalize_and_save(np.squeeze(features_data),time_flag=True)
             self.X_input = normalize_std_scaler(self.X_input, scaler)
@@ -59,7 +56,8 @@ class Train_Model:
             self.X_input, self.y_output,
             epochs=p.epochs,
             batch_size=p.batch_size,
-            verbose=1
+            verbose=1,
+            callbacks=[SaveEveryNEpoch(save_path=self.model_filepath, interval=10)]
         )
 
         save_loss_plot(history,loss_filename='training_loss.png',time_flag=True)
@@ -83,6 +81,10 @@ class Train_Model:
         model = LSTM_model(self.hidden_state_num, len(p.classes_list)+1, p.time_steps, len(p.feature_list), self.layer_num)
         self.train_model(model)
 
+    def main_more(self):
+        model = model = tf.keras.models.load_model('./model/model_250624/LSTM_h256_layer4_class3_104635.h5')
+        self.train_model(model)
+
 if __name__ == "__main__":
-    tm_500_3 = Train_Model(hidden_state_num=256, layer_num=4)
-    tm_500_3.main()
+    tm_256_4 = Train_Model(hidden_state_num=256, layer_num=4)
+    tm_256_4.main_more()

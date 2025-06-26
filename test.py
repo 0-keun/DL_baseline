@@ -12,10 +12,7 @@ from tensorflow.keras.utils import to_categorical
 
 import json
 
-with open('./params.json', 'r') as f:
-    params = json.load(f)
-
-p = load_json()
+p = load_json('./params_3F.json')
 
 def get_params(filename):
     # 1) basename만 뽑아내고 싶으면 pathlib 사용
@@ -57,17 +54,9 @@ class Tester():
         accuracy = accuracy_score(y_true_classes, y_pred_classes)
         print(f"Accuracy: {accuracy * 100:.2f}%")
 
-        # # 분류 보고서
-        # print("\nClassification Report:")
-        # print(classification_report(y_true_classes, y_pred_classes))
-
         # 혼동 행렬
         get_confusion_mat(y_true_classes, y_pred_classes,time_flag=True)
 
-        # # 실행 시간 출력
-        # execution_time = end_time - start_time
-        # print("The prediction took", execution_time, "seconds to complete")
-
-test_500_3 = Tester('./model/model_250612/LSTM_h500_layer3_class9_161938.h5')
+test_500_3 = Tester('./model/model_250625/LSTM_h256_layer4_class3_193016.h5')
 
 test_500_3.main()

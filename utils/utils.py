@@ -121,7 +121,6 @@ def name_to_filepath(name_ext, time_flag=False):
     '''
     if '.' in name_ext:
         name, ext = name_ext.split('.')
-        ext = '.'+ext
 
     if not time_flag:
         dirname = './'+name+'/'

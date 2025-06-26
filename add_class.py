@@ -12,11 +12,11 @@ with open('./params.json', 'r') as f:
 p = load_json()
 
 # 1. 폴더 경로 지정
-folder_path = './dataset/dataset_added'  # 실제 경로로 변경하세요
+folder_path = './dataset/dataset_train_added'  
 
 # 2. 폴더 내 모든 CSV 파일 리스트 가져오기
-open_cols = ['open1:Output','open2:Output','open3:Output','open4:Output']
-short_cols = ['short1:Output','short2:Output','short3:Output','short4:Output']
+open_cols = ['open1_time','open2_time','open3','open4']
+short_cols = ['short1_time','short2_time','short3','short4']
 
 def add_new_class(dir_name,cols,new_class):
     csv_files = glob.glob(os.path.join(dir_name, '*.csv'))
