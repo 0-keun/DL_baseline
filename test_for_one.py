@@ -14,7 +14,7 @@ from tensorflow.keras.utils import to_categorical
 import json
 
 p = load_json('./params_3F.json')
-fname = '/data_f_6_t_1.165007.csv'
+fname = '/data_f_7_t_1.182362.csv'
 
 def get_params(filename, pattern = r'LSTM_h(\d+)_layer(\d+)\_class(\d+)_(\d+).h5$'):
     # 1) basename만 뽑아내고 싶으면 pathlib 사용
@@ -59,6 +59,7 @@ class Tester():
         # 정확도(Accuracy) 계산
         accuracy = accuracy_score(y_true_classes, y_pred_classes)
         # print(f"Accuracy: {accuracy * 100:.2f}%")
+        print('>>>>>>>>>>>>>> ',y_pred_classes)
         cnt = 0
         for i in range(len(y_true_classes)):
             if not y_pred_classes[i] == y_true_classes[i]:
@@ -75,9 +76,16 @@ test_500_3 = Tester('./model/model_250617/LSTM_h256_layer4_class3_2041121000.h5'
 w_list = np.zeros(160)
 c_list = np.zeros(9)
 list = []
-for fname in os.listdir(p.test_data_dir):
+
+if False:
+    for fname in os.listdir(p.test_data_dir):
+        test_500_3.reset(p.test_data_dir+'/'+fname)
+        w_list, c_list, list = test_500_3.main(w_list,c_list, list)
+else:
     test_500_3.reset(p.test_data_dir+'/'+fname)
     w_list, c_list, list = test_500_3.main(w_list,c_list, list)
+    
+
 print(f"w_list = {w_list}")
 print(f"c_list = {c_list}")
 print(list)
