@@ -10,7 +10,8 @@ from utils.models import FFNN_model
 from utils.utils import load_json, save_loss_plot, name_time
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 from tensorflow.keras.utils import to_categorical
-
+import matplotlib.pyplot as plt
+import os
 import json
 
 
@@ -35,6 +36,20 @@ from tensorflow.keras.models import load_model
 #         num2 = int(m.group(2))   # layer 뒤 숫자
 #         num3 = int(m.group(3))
 #         return num1, num2, num3
+
+def plot_predictions(y_true, y_pred, output_dir="plots"):
+    os.makedirs(output_dir, exist_ok=True)
+    for i in range(y_pred.shape[1]):
+        plt.figure(figsize=(8, 4))
+        plt.plot(y_true[:, i], label='Ground Truth')
+        plt.plot(y_pred[:, i], label='Prediction')
+        plt.title(f"Output {i}: Prediction vs Ground Truth")
+        plt.xlabel("Sample Index")
+        plt.ylabel("Value")
+        plt.legend()
+        plt.tight_layout()
+        plt.savefig(os.path.join(output_dir, f"output_{i}_prediction.png"))
+        plt.close()
 
 p = load_json('./params.json')
 df = pd.read_csv(p.test_data_dir)
@@ -76,7 +91,8 @@ class Tester():
         percent_error = np.abs(y_pred - self.y_output) * 100 / np.abs(self.y_output)
         mean_percent_error = np.mean(percent_error)
         print(f"평균 Percent Error: {mean_percent_error:.2f}%")
+        plot_predictions(self.y_output, y_pred, output_dir='plots_baseline')
 
-test = Tester('./model/model_250613/DNN_DAB_est_162956.h5')
+test = Tester('./model/model_250710/DNN_DAB_est_214813.h5')
 
 test.main()
