@@ -32,6 +32,7 @@ def get_params(filename):
 class Tester():
     def __init__(self, model_name):
         self.model = load_model(model_name)
+        self.model_name = model_name
         self.hidden_state, self.num_layer, _ = get_params(model_name)
         self.X_input, self.y_output = make_sequence_dataset(p.test_data_dir,p.time_steps,p.feature_list,p.classes_list)
         self.X_input = load_and_normalize(self.X_input,'./scaler/mean_135845.npy','./scaler/scale_135845.npy')
@@ -55,7 +56,11 @@ class Tester():
         print(f"Accuracy: {accuracy * 100:.2f}%")
 
         # 혼동 행렬
-        get_confusion_mat(y_true_classes, y_pred_classes,time_flag=True)
+        trained_data = p.train_data_dir.split('_')[-1]
+        tested_data = p.test_data_dir.split('_')[-1]
+        model_fname = self.model_name.split('/')[-1].split('_')[-1].split('.')[0]
+        model_fdir = self.model_name.split('/')[-2].split('-')[-1]
+        get_confusion_mat(y_true_classes, y_pred_classes, tested_model=model_fdir+model_fname, trained_data=trained_data, tested_data=tested_data, time_flag=True)
 
 test_500_3 = Tester('./model/model_250625/LSTM_h256_layer4_class3_193016.h5')
 

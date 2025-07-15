@@ -123,6 +123,82 @@ def RNN_model(hidden_state_num, class_num, time_steps, feature_num, layer_num):
         return model
     
 
+# ──────────────── Adversarial Training용 모델 ────────────────
+class AdversarialLSTM(tf.keras.Model):
+    def __init__(self, base_model, eps=0.01):
+        super().__init__()
+        self.base_model = base_model
+        self.eps = eps  # FGSM perturbation 크기
+
+    def call(self, inputs, training=False):
+        return self.base_model(inputs, training=training)
+
+    def train_step(self, data):
+        x, y = data
+
+        # 1) 원본 데이터에 대한 gradient 계산
+        with tf.GradientTape() as tape:
+            tape.watch(x)
+            y_pred = self(x, training=True)
+            loss = self.compiled_loss(y, y_pred)
+        grad = tape.gradient(loss, x)
+
+        # 2) FGSM 적대적 예시 생성
+        x_adv = x + self.eps * tf.sign(grad)
+        x_adv = tf.clip_by_value(x_adv, 0.0, 1.0)
+
+        # 3) 원본 + 적대 예시 합치기
+        x_comb = tf.concat([x, x_adv], axis=0)
+        y_comb = tf.concat([y, y], axis=0)
+
+        # 4) 합쳐진 데이터로 업데이트
+        with tf.GradientTape() as tape2:
+            y_pred2 = self(x_comb, training=True)
+            loss2 = self.compiled_loss(y_comb, y_pred2)
+        grads = tape2.gradient(loss2, self.trainable_variables)
+        self.optimizer.apply_gradients(zip(grads, self.trainable_variables))
+
+        # 5) metric 업데이트 & 결과 리턴
+        self.compiled_metrics.update_state(y_comb, y_pred2)
+        return {m.name: m.result() for m in self.metrics}
+
+
+# ──────────────── 기존 LSTM_model 함수 수정 ────────────────
+def LSTM_model_ADV(hidden_state_num, class_num, time_steps, feature_num, layer_num, eps=0.01):
+    """
+    AdversarialLSTM으로 wrapping된 모델을 반환합니다.
+    eps: FGSM perturbation 크기
+    """
+    with strategy.scope():
+        # 1) 기본 Sequential 아키텍처 생성
+        base = Sequential()
+        base.add(Input(shape=(time_steps, feature_num)))
+        for _ in range(layer_num - 1):
+            base.add(LSTM(hidden_state_num, return_sequences=True))
+            base.add(Dropout(0.2))
+        base.add(LSTM(hidden_state_num))
+        base.add(Dropout(0.2))
+
+        # 클래스 수에 따라 마지막 activation/ loss 설정
+        if class_num > 2:
+            base.add(Dense(class_num, activation='softmax'))
+            loss_fn = 'categorical_crossentropy'
+        else:
+            base.add(Dense(class_num, activation='sigmoid'))
+            loss_fn = 'binary_crossentropy'
+
+        # 2) Adversarial 원본 모델 감싸기
+        model = AdversarialLSTM(base, eps=eps)
+
+        # 3) 컴파일
+        model.compile(
+            optimizer=tf.keras.optimizers.Adam(),
+            loss=loss_fn,
+            metrics=['accuracy']
+        )
+
+    return model
+
 ##############################
 ##           FFNN           ##
 ##############################

@@ -66,9 +66,16 @@ def save_acc_plot(history, acc_filename='accuracy.png', time_flag=False):
     plt.savefig(acc_filepath, dpi=150, bbox_inches='tight')
     plt.close()
 
-def get_confusion_mat(y_true, y_pred, name='confusion_matrix', time_flag=False , save_csv=True, save_png=True):
-    csv_filepath = name_to_filepath(name_ext=name+'.csv',time_flag=time_flag)
-    png_filepath = name_to_filepath(name_ext=name+'.png',time_flag=time_flag)
+def get_confusion_mat(y_true, y_pred, name='confusion_matrix', tested_model=None, trained_data='trained_data', tested_data='tested_data', time_flag=False , save_csv=True, save_png=True):
+    if tested_model:
+        dirname = name_to_dir(name=name)+tested_model+'_'+trained_data+'/'
+        if not os.path.exists(dirname):
+            os.makedirs(dirname, exist_ok=True)
+        csv_filepath = dirname+tested_data+'.csv'
+        png_filepath = dirname+tested_data+'.png'
+    else:
+        csv_filepath = name_to_filepath(name_ext=name+'.csv',time_flag=time_flag)
+        png_filepath = name_to_filepath(name_ext=name+'.png',time_flag=time_flag)
 
     cm=confusion_matrix(y_true, y_pred)
     if save_png:

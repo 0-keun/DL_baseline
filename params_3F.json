@@ -10,7 +10,7 @@
         "OPEN",
         "SHORT"
     ],
-    "train_data_dir": "./dataset/dataset_train_added_noise",
+    "train_data_dir": "./dataset/dataset_train_added",
     "test_data_dir": "./dataset/dataset_test_added",
     "epochs": 5000,
     "batch_size": 256
