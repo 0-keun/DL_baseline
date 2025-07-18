@@ -12,6 +12,6 @@
     ],
     "train_data_dir": "./dataset/dataset_train_added",
     "test_data_dir": "./dataset/dataset_test_added",
-    "epochs": 5000,
+    "epochs": 170,
     "batch_size": 256
 }

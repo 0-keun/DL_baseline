@@ -124,43 +124,102 @@ def RNN_model(hidden_state_num, class_num, time_steps, feature_num, layer_num):
     
 
 # ──────────────── Adversarial Training용 모델 ────────────────
+import tensorflow as tf
+
 class AdversarialLSTM(tf.keras.Model):
-    def __init__(self, base_model, eps=0.01):
+    def __init__(self, base_model,
+                 attack_method='bim',  # 'fgsm', 'bim', or 'pgd'
+                 eps=0.01,
+                 alpha=0.005,
+                 iters=3):
+        """
+        attack_method: 'fgsm' | 'bim' | 'pgd'
+        eps          : L∞ 볼 반경
+        alpha        : 한 스텝당 perturb 크기 (bim/pgd)
+        iters        : 반복 횟수 (bim/pgd)
+        """
         super().__init__()
         self.base_model = base_model
-        self.eps = eps  # FGSM perturbation 크기
+        self.attack_method = attack_method
+        self.eps = eps
+        self.alpha = alpha
+        self.iters = iters
 
     def call(self, inputs, training=False):
         return self.base_model(inputs, training=training)
 
+    def _fgsm(self, x, y):
+        # 단일-step FGSM
+        with tf.GradientTape() as tape:
+            tape.watch(x)
+            preds = self(x, training=True)
+            loss = self.compiled_loss(y, preds)
+        grad = tape.gradient(loss, x)
+        x_adv = x + self.eps * tf.sign(grad)
+        return tf.clip_by_value(x_adv, 0.0, 1.0)
+
+    def _bim(self, x, y):
+        # I‑FGSM: BIM without random start
+        x_adv = tf.identity(x)
+        for _ in range(self.iters):
+            with tf.GradientTape() as tape:
+                tape.watch(x_adv)
+                preds = self(x_adv, training=True)
+                loss = self.compiled_loss(y, preds)
+            grad = tape.gradient(loss, x_adv)
+            x_adv = x_adv + self.alpha * tf.sign(grad)
+            # 원본 x 주변 eps 이내로 클리핑
+            x_adv = tf.clip_by_value(x_adv, x - self.eps, x + self.eps)
+            x_adv = tf.clip_by_value(x_adv, 0.0, 1.0)
+        return x_adv
+
+    def _pgd(self, x, y):
+        # PGD: random start + BIM
+        # 1) 랜덤 초기화
+        x_adv = x + tf.random.uniform(tf.shape(x), 
+                                      minval=-self.eps, maxval=self.eps)
+        x_adv = tf.clip_by_value(x_adv, 0.0, 1.0)
+        # 2) 반복적 FGSM + 투사
+        for _ in range(self.iters):
+            with tf.GradientTape() as tape:
+                tape.watch(x_adv)
+                preds = self(x_adv, training=True)
+                loss = self.compiled_loss(y, preds)
+            grad = tape.gradient(loss, x_adv)
+            x_adv = x_adv + self.alpha * tf.sign(grad)
+            # x 주변 eps 이내, 그리고 [0,1] 범위로 클리핑
+            x_adv = tf.clip_by_value(x_adv, x - self.eps, x + self.eps)
+            x_adv = tf.clip_by_value(x_adv, 0.0, 1.0)
+        return x_adv
+
     def train_step(self, data):
         x, y = data
 
-        # 1) 원본 데이터에 대한 gradient 계산
-        with tf.GradientTape() as tape:
-            tape.watch(x)
-            y_pred = self(x, training=True)
-            loss = self.compiled_loss(y, y_pred)
-        grad = tape.gradient(loss, x)
+        # 1) 공격 예시 생성
+        if self.attack_method == 'fgsm':
+            x_adv = self._fgsm(x, y)
+        elif self.attack_method == 'bim':
+            x_adv = self._bim(x, y)
+        elif self.attack_method == 'pgd':
+            x_adv = self._pgd(x, y)
+        else:
+            raise ValueError(f"Unknown attack method: {self.attack_method}")
 
-        # 2) FGSM 적대적 예시 생성
-        x_adv = x + self.eps * tf.sign(grad)
-        x_adv = tf.clip_by_value(x_adv, 0.0, 1.0)
-
-        # 3) 원본 + 적대 예시 합치기
+        # 2) 원본 + 적대 예시 합치기
         x_comb = tf.concat([x, x_adv], axis=0)
         y_comb = tf.concat([y, y], axis=0)
 
-        # 4) 합쳐진 데이터로 업데이트
-        with tf.GradientTape() as tape2:
-            y_pred2 = self(x_comb, training=True)
-            loss2 = self.compiled_loss(y_comb, y_pred2)
-        grads = tape2.gradient(loss2, self.trainable_variables)
+        # 3) 학습
+        with tf.GradientTape() as tape:
+            preds = self(x_comb, training=True)
+            loss = self.compiled_loss(y_comb, preds)
+        grads = tape.gradient(loss, self.trainable_variables)
         self.optimizer.apply_gradients(zip(grads, self.trainable_variables))
 
-        # 5) metric 업데이트 & 결과 리턴
-        self.compiled_metrics.update_state(y_comb, y_pred2)
+        # 4) metric 업데이트
+        self.compiled_metrics.update_state(y_comb, preds)
         return {m.name: m.result() for m in self.metrics}
+
 
 
 # ──────────────── 기존 LSTM_model 함수 수정 ────────────────
@@ -188,7 +247,7 @@ def LSTM_model_ADV(hidden_state_num, class_num, time_steps, feature_num, layer_n
             loss_fn = 'binary_crossentropy'
 
         # 2) Adversarial 원본 모델 감싸기
-        model = AdversarialLSTM(base, eps=eps)
+        model = AdversarialLSTM(base, attack_method='pgd', eps=eps)
 
         # 3) 컴파일
         model.compile(

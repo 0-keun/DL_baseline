@@ -78,11 +78,11 @@ class Train_Model:
         model.save(self.model_filepath)
 
     def main(self):
-        model = LSTM_model_ADV(self.hidden_state_num, len(p.classes_list)+1, p.time_steps, len(p.feature_list), self.layer_num)
+        model = LSTM_model_ADV(self.hidden_state_num, len(p.classes_list)+1, p.time_steps, len(p.feature_list), self.layer_num, eps=0.08)
         self.train_model(model)
 
     def main_more(self):
-        model = tf.keras.models.load_model('./model/model_250624/LSTM_h256_layer4_class3_104635.h5')
+        model = tf.keras.models.load_model('./model/model_250716/LSTM_ADV2_normal_214418.h5')
         self.train_model(model)
 
 if __name__ == "__main__":

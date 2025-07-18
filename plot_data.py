@@ -14,7 +14,7 @@ def split_data(data):
     return data0, data1, data2
 
 feature_name  = ['Vo:Measured voltage','IL:Measured current','Vin:Measured voltage']
-input_file    = "./dataset/dataset_test_added/data_f_3_t_1.102649.csv"
+input_file    = "./dataset/dataset_test_added/data_f_0_t_1.100444.csv"
 
 df = read_csv(input_file, index_col=None)
 data = df[feature_name].values

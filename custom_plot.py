@@ -64,7 +64,7 @@ def draw_single_subplot(time, Vo, I_L, Vin, title):
     plt.yticks(fontsize=20)
     plt.plot(time, Vo, label='Vo [V]', color='blue', linewidth=1.5)
     plt.plot(time, I_L, label='I_L [A]', color='green', linewidth=1.5)
-    plt.plot(time, Vin, label='Vin [V]', color='red', linewidth=1.5)
+    # plt.plot(time, Vin, label='Vin [V]', color='red', linewidth=1.5)
     plt.grid(ls=':')
     # plt.title(title, fontsize=30)
     plt.xlabel("Time [s]", fontsize=30)

@@ -83,7 +83,7 @@ class Train_Model:
 
     def main_more(self):
         # ./model/model_250624/LSTM_h256_layer4_class3_104635 is the vanilla model
-        model = model = tf.keras.models.load_model('./model/model_250624/LSTM_h256_layer4_class3_104635.h5')
+        model = model = tf.keras.models.load_model('./model/model_250624/LSTM_Vanilla_normal_104635.h5')
         self.train_model(model)
 
 if __name__ == "__main__":
