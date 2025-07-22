@@ -176,22 +176,68 @@ if TEST:
         model.eval()
         likelihood.eval()
 
-        with torch.no_grad(), gpytorch.settings.fast_pred_var():
-            preds = likelihood(model(X_tensor))
-            z_means.append(preds.mean.cpu().numpy())
-            z_stds.append(preds.stddev.cpu().numpy())
+        with torch.no_grad():
+            # 정확한 분산 계산 모드로 전환 (fast_pred_var 끄기)
+            with gpytorch.settings.fast_pred_var(False):
+                preds = likelihood(model(X_tensor))
+
+            # mean, var 꺼내오기
+            mean = preds.mean
+            var  = preds.variance
+
+            # NaN 제거: mean은 0, var은 0 으로 대체
+            mean = torch.where(torch.isnan(mean), torch.zeros_like(mean), mean)
+            var  = torch.where(torch.isnan(var),  torch.zeros_like(var),  var)
+
+            # 분산 음수 클램핑 & std 계산
+            var = var.clamp(min=0.0)
+            std = var.sqrt()
+
+            z_means.append(mean.cpu().numpy())
+            z_stds .append(std.cpu().numpy())
 
     z_mean = np.stack(z_means, axis=1)
     z_std = np.stack(z_stds, axis=1)
 
-    # NaN 포함된 샘플 출력
-    for i, row in enumerate(z_mean):
-        if np.isnan(row).any():
-            print(f"[NaN Detected @ Sample {i}] {row}")
+    # # NaN 포함된 샘플 출력
+    # for i, row in enumerate(z_mean):
+    #     if np.isnan(row).any():
+    #         print(f"[NaN Detected @ Sample {i}] {row}")
 
     y_pred = svd.inverse_transform(z_mean) if USE_DNGPA else z_mean
     y_std = svd.inverse_transform(z_std) if USE_DNGPA else z_std
 
     evaluate_prediction(y_true, y_pred)
     plot_predictions(y_true, y_pred)
-    pd.DataFrame(y_pred, columns=[f"y{i}_pred" for i in range(y_pred.shape[1])]).to_csv("predicted.csv", index=False)
+    
+    # Save predictions & stddevs
+    pred_df = pd.DataFrame(y_pred, columns=[f"y{i}_pred" for i in range(y_pred.shape[1])])
+    std_df  = pd.DataFrame(y_std,  columns=[f"y{i}_std"  for i in range(y_std.shape[1])])
+    pred_df.to_csv("predicted.csv", index=False)
+    std_df.to_csv("predicted_std.csv", index=False)
+
+    # Plot and save mean vs ground truth
+    mean_dir = "plots_mean"; std_dir = "plots_std"
+    os.makedirs(mean_dir, exist_ok=True)
+    os.makedirs(std_dir,  exist_ok=True)
+
+    n_out = y_pred.shape[1]
+    for i in range(n_out):
+        plt.figure(figsize=(8,4))
+        plt.plot(y_true[:, i], label='Ground Truth')
+        plt.plot(y_pred[:, i], label='Predicted Mean')
+        plt.title(f'Output {i} Mean Prediction')
+        plt.xlabel('Sample Index'); plt.ylabel('Value')
+        plt.legend(); plt.tight_layout()
+        plt.savefig(os.path.join(mean_dir, f'output_{i}_mean.png'))
+        plt.close()
+
+    # Plot and save stddev
+    for i in range(n_out):
+        plt.figure(figsize=(8,4))
+        plt.plot(y_std[:, i], label='Predicted Std Dev')
+        plt.title(f'Output {i} Std Dev')
+        plt.xlabel('Sample Index'); plt.ylabel('Std Dev')
+        plt.legend(); plt.tight_layout()
+        plt.savefig(os.path.join(std_dir, f'output_{i}_std.png'))
+        plt.close()

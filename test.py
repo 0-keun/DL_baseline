@@ -93,6 +93,6 @@ class Tester():
         print(f"평균 Percent Error: {mean_percent_error:.2f}%")
         plot_predictions(self.y_output, y_pred, output_dir='plots_baseline')
 
-test = Tester('./model/model_250710/DNN_DAB_est_214813.h5')
+test = Tester('./model/model_250718/DNN_DAB_est_153156.h5')
 
 test.main()

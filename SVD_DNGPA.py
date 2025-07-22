@@ -11,7 +11,7 @@ from sklearn.metrics import mean_absolute_error, r2_score
 import matplotlib.pyplot as plt
 from utils.utils import load_json
 
-TRAIN = True
+TRAIN = False
 TEST = True
 USE_DNGPA = True
 LATENT_DIM = 16
