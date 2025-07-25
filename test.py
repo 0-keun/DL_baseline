@@ -74,6 +74,9 @@ class Tester():
     def main(self):
         # 예측 수행
         y_pred = self.model.predict(self.X_input)
+        pred_df = pd.DataFrame(y_pred, columns=[f"y{i}_pred_v" for i in range(y_pred.shape[1])])
+        pred_df.to_csv("predicted_vanilla.csv", index=False)
+            
         np.set_printoptions(suppress=True, precision=6)
         # print(f"Actual: {self.y_output}")
         # print(f"Pred: {y_pred}")
@@ -93,6 +96,6 @@ class Tester():
         print(f"평균 Percent Error: {mean_percent_error:.2f}%")
         plot_predictions(self.y_output, y_pred, output_dir='plots_baseline')
 
-test = Tester('./model/model_250718/DNN_DAB_est_153156.h5')
+test = Tester('./model/model_250725/DNN_DAB_est_133108.h5')
 
 test.main()

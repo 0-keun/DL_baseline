@@ -25,8 +25,8 @@ if SAVE_NORMALIZATION_FILE:
 else:
     X = load_and_normalize(X,'./scaler/scaler_250612/mean_213605.npy','./scaler/scaler_250612/scale_213605.npy')
 
-print(X)
-print(y)
+# print(X)
+# print(y)
 
 model = FFNN_model(feature_num=len(p.feature_list), output_num=len(p.output_list))
 

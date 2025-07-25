@@ -11,10 +11,11 @@ from sklearn.metrics import mean_absolute_error, r2_score
 import matplotlib.pyplot as plt
 from utils.utils import load_json
 
+p = load_json('./params.json')
 TRAIN = False
 TEST = True
 USE_DNGPA = True
-LATENT_DIM = 16
+LATENT_DIM = len(p.output_list)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -209,7 +210,7 @@ if TEST:
 
     evaluate_prediction(y_true, y_pred)
     plot_predictions(y_true, y_pred)
-    
+
     # Save predictions & stddevs
     pred_df = pd.DataFrame(y_pred, columns=[f"y{i}_pred" for i in range(y_pred.shape[1])])
     std_df  = pd.DataFrame(y_std,  columns=[f"y{i}_std"  for i in range(y_std.shape[1])])
