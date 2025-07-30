@@ -86,16 +86,18 @@ class Tester():
             for j in range(len(self.y_output[i])):
                 print((y_pred[i][j] - self.y_output[i][j])*100/self.y_output[i][j])
 
-
             percent_error = np.abs(y_pred[i] - self.y_output[i]) * 100 / np.abs(self.y_output[i])
             mean_percent_error = np.mean(percent_error)
             print(f"[{i}] Percent Error: {mean_percent_error:.2f}%")
 
         percent_error = np.abs(y_pred - self.y_output) * 100 / np.abs(self.y_output)
+        absolute_error = np.abs(y_pred - self.y_output)
         mean_percent_error = np.mean(percent_error)
+        mean_absolute_error = np.mean(absolute_error)
         print(f"평균 Percent Error: {mean_percent_error:.2f}%")
+        print(f"평균 Absolute Error: {mean_absolute_error:.2f}")
         plot_predictions(self.y_output, y_pred, output_dir='plots_baseline')
 
-test = Tester('./model/model_250725/DNN_DAB_est_133108.h5')
+test = Tester('./model/model_250728/DNN_DAB_est_213545.h5')
 
 test.main()

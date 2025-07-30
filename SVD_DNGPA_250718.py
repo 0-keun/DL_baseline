@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 from utils.utils import load_json
 
 p = load_json('./params.json')
-TRAIN = False
+TRAIN = True
 TEST = True
 USE_DNGPA = True
 LATENT_DIM = len(p.output_list)
