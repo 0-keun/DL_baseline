@@ -67,7 +67,7 @@ test_Vanilla_noise  = Tester('./model/model_250716/LSTM_Vanilla_noise_102601.h5'
 test_ADV_normal     = Tester('./model/model_250718/LSTM_ADV2_normal_051810.h5')
 test_ADV_noise      = Tester('./model/model_250714/LSTM_ADV_noise_143023.h5')
 
-# test_Vanilla_normal.main()
+test_Vanilla_normal.main()
 # test_Vanilla_noise.main()
-test_ADV_normal.main()    
-# test_ADV_noise.main()
+# test_ADV_normal.main()    
+test_ADV_noise.main()
