@@ -98,6 +98,6 @@ class Tester():
         print(f"평균 Absolute Error: {mean_absolute_error:.2f}")
         plot_predictions(self.y_output, y_pred, output_dir='plots_baseline')
 
-test = Tester('./model/model_250731/DNN_DAB_est_200149.h5')
+test = Tester('./model/model_250801/DNN_DAB_est_024042.h5')
 
 test.main()
