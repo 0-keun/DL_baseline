@@ -13,7 +13,7 @@ from utils.utils import load_json
 from torch.nn.utils import spectral_norm
 
 p = load_json('./params.json')
-TRAIN = True
+TRAIN = False
 TEST = True
 USE_DNGPA = True
 LATENT_DIM = len(p.output_list)
@@ -55,6 +55,7 @@ class DKLGPModel(gpytorch.models.ApproximateGP):
 
 def evaluate_prediction(y_true, y_pred, epsilon=1e-8):
     e_list = []
+    absolute_error_list = []
     for i in range(y_pred.shape[1]):
         y_t = y_true[:, i]
         y_p = y_pred[:, i]
@@ -69,7 +70,9 @@ def evaluate_prediction(y_true, y_pred, epsilon=1e-8):
         print(f"   Mean Relative Error: {mre:.2f}%")
         print(f"   R² Score: {r2:.4f}")
         e_list.append(mre)
+        absolute_error_list.append(mae)
     print(f"   MRE: {sum(e_list)/len(e_list):.2f}%")
+    print(f"   MRE: {sum(absolute_error_list)/len(absolute_error_list):.4f}")
 
 def plot_predictions(y_true, y_pred, y_std=None, output_dir="plots"):
     os.makedirs(output_dir, exist_ok=True)
