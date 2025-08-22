@@ -86,6 +86,40 @@ def get_confusion_mat(y_true, y_pred, name='confusion_matrix', tested_model=None
     if save_csv:
         np.savetxt(csv_filepath, cm, fmt='%d', delimiter=',')
 
+def get_confusion_mat_size(y_true, y_pred, name='confusion_matrix', tested_model=None, trained_data='trained_data', tested_data='tested_data', time_flag=False , save_csv=True, save_png=True, figsize=(5, 4), fontsize=15):
+    if tested_model:
+        dirname = name_to_dir(name=name)+tested_model+'_'+trained_data+'/'
+        if not os.path.exists(dirname):
+            os.makedirs(dirname, exist_ok=True)
+        csv_filepath = dirname+tested_data+'.csv'
+        png_filepath = dirname+tested_data+'.png'
+    else:
+        csv_filepath = name_to_filepath(name_ext=name+'.csv',time_flag=time_flag)
+        png_filepath = name_to_filepath(name_ext=name+'.png',time_flag=time_flag)
+
+    cm = confusion_matrix(y_true, y_pred)
+
+    if save_png:
+        fig, ax = plt.subplots(figsize=figsize)
+        disp = ConfusionMatrixDisplay(confusion_matrix=cm)
+        disp.plot(cmap='Blues', ax=ax, colorbar=False)
+        
+        # 글꼴 크기 조절
+        ax.set_title('Confusion Matrix', fontsize=fontsize+2)
+        ax.set_xlabel('Predicted label', fontsize=fontsize)
+        ax.set_ylabel('True label', fontsize=fontsize)
+        ax.tick_params(axis='both', labelsize=fontsize)
+
+        # 안에 있는 숫자(font size 조정)
+        for text in disp.ax_.texts:
+            text.set_fontsize(fontsize)
+
+        plt.tight_layout()
+        plt.savefig(png_filepath)
+        plt.close()
+
+    if save_csv:
+        np.savetxt(csv_filepath, cm, fmt='%d', delimiter=',')
 
 ##############################
 ##           NAME           ##

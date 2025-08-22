@@ -88,4 +88,3 @@ class Train_Model:
 
 if __name__ == "__main__":
     tm_256_4 = Train_Model(hidden_state_num=256, layer_num=4)
-    tm_256_4.main_more()

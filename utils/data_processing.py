@@ -191,6 +191,51 @@ def read_all_csv_to_np_list(dir_path,feature_list,classes_list,dim_reduction=Fal
     
     return features_list, class_list
 
+def make_sequence_dataset_specific_section(dir_path, time_steps, feature_list, classes_list, scaler=None):
+    X_list = []   # feature 시퀀스 리스트
+    y_list = []   # class(레이블) 시퀀스 리스트
+
+    if scaler == None:
+        for fname in os.listdir(dir_path):
+            if fname.endswith('.csv'):
+                file_path = os.path.join(dir_path, fname)
+                df = pd.read_csv(file_path)
+                
+                features = df[feature_list].values  # (N, F)
+                classes = df[classes_list].values   # (N, C) 또는 (N,) 형태
+                
+                N = len(df)
+                X_seq = features[N-250:N]     # (time_steps, F)
+                y_seq = classes[N-1]      # (time_steps, C) 또는 (time_steps,)
+                                    
+                X_list.append(X_seq)
+                y_list.append(y_seq)
+        
+        X = np.array(X_list)   # (전체시퀀스수, time_steps, F)
+        y = np.array(y_list)   # (전체시퀀스수, time_steps, C) 또는 (전체시퀀스수, time_steps)
+
+    else:
+        for fname in os.listdir(dir_path):
+            if fname.endswith('.csv'):
+                file_path = os.path.join(dir_path, fname)
+                df = pd.read_csv(file_path)
+                
+                features = df[feature_list].values  # (N, F)
+                classes = df[classes_list].values   # (N, C) 또는 (N,) 형태
+                
+                N = len(df)
+                X_seq = features[N-250:N]     # (time_steps, F)
+                y_seq = classes[N-1]      # (time_steps, C) 또는 (time_steps,)
+                                    
+                X_list.append(X_seq)
+                y_list.append(y_seq)
+        
+        X = np.array(X_list)   # (전체시퀀스수, time_steps, F)
+        y = np.array(y_list)   # (전체시퀀스수, time_steps, C) 또는 (전체시퀀스수, time_steps)
+
+    return X, y
+
+
 def make_sequence_dataset(dir_path, time_steps, feature_list, classes_list, scaler=None):
     X_list = []   # feature 시퀀스 리스트
     y_list = []   # class(레이블) 시퀀스 리스트

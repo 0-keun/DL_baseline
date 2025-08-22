@@ -1,6 +1,10 @@
 {
     "time_steps": 250,
     "bulk_size": 300,
+    "viz_feature_list": [
+        "IL:Measured current",
+        "Vin:Measured voltage"
+    ],
     "feature_list": [
         "Vo:Measured voltage",
         "IL:Measured current",
@@ -10,8 +14,14 @@
         "OPEN",
         "SHORT"
     ],
-    "train_data_dir": "./dataset/dataset_train_added",
-    "test_data_dir": "./dataset/dataset_test_HIL",
+    "viz_classes_list": [
+        "OPEN_NOISE",
+        "SHORT_NOISE",
+        "NORMAL_NOISE"
+    ],
+    "train_data_dir": "./dataset/dataset_steady/dataset_steady_normal",
+    "noise_data_dir": "./dataset/dataset_steady_noise/dataset_steady_noise_normal",
+    "test_data_dir": "./dataset/250821_dataset_HILS",
     "epochs": 170,
     "batch_size": 256
 }
