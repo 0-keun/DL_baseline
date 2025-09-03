@@ -2,6 +2,9 @@ from custom_plot import draw_single_subplot, draw_fault_subplot
 import numpy as np
 import pandas as pd
 from pandas import read_csv
+from utils.utils import load_json
+
+p = load_json('./params.json')
 
 # def split_data(data):
 #     data1 = []
@@ -16,7 +19,7 @@ from pandas import read_csv
 # feature_name  = ['y0_pred_v']
 # input_file    = "./dataset/dataset_test_added/data_f_0_t_1.100444.csv"
 
-df_o = read_csv("./dataset/dataset_OOD_single_load_400.csv", index_col=None)
+df_o = read_csv(p.test_data_dir, index_col=None)
 df_v = read_csv("./predicted_vanilla.csv", index_col=None)
 df_p = read_csv("./predicted.csv", index_col=None)
 

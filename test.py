@@ -13,7 +13,7 @@ from tensorflow.keras.utils import to_categorical
 import matplotlib.pyplot as plt
 import os
 import json
-
+from evaluate_result import summarize_metrics
 
 # test_model.py
 
@@ -88,17 +88,21 @@ class Tester():
 
             percent_error = np.abs(y_pred[i] - self.y_output[i]) * 100 / np.abs(self.y_output[i])
             mean_percent_error = np.mean(percent_error)
-            print(f"[{i}] Percent Error: {mean_percent_error:.2f}%")
+            # print(f"[{i}] Percent Error: {mean_percent_error:.4f}%")
 
         percent_error = np.abs(y_pred - self.y_output) * 100 / np.abs(self.y_output)
         absolute_error = np.abs(y_pred - self.y_output)
         mean_percent_error = np.mean(percent_error)
         mean_absolute_error = np.mean(absolute_error)
-        print(f"평균 Percent Error: {mean_percent_error:.2f}%")
-        print(f"평균 Absolute Error: {mean_absolute_error:.2f}")
+        # print(f"평균 Percent Error: {mean_percent_error:.4f}%")
+        # print(f"평균 Absolute Error: {mean_absolute_error:.4f}")
         plot_predictions(self.y_output, y_pred, output_dir='plots_baseline')
 
-# test = Tester('./model/model_250801/DNN_DAB_est_024042.h5')   # epochs: 1000
-test = Tester('./model/model_250801/DNN_DAB_est_110041.h5')   # epochs: 10000
+        summary = summarize_metrics(self.y_output, y_pred)
+        for k, v in summary.items():
+            print(k, ":", v)
+
+test = Tester('./model/model_250801/DNN_DAB_est_024042.h5')   # epochs: 1000
+# test = Tester('./model/model_250801/DNN_DAB_est_110041.h5')   # epochs: 10000
 
 test.main()

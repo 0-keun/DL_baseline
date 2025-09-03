@@ -11,9 +11,11 @@ from sklearn.metrics import mean_absolute_error, r2_score
 import matplotlib.pyplot as plt
 from utils.utils import load_json
 from torch.nn.utils import spectral_norm
+from evaluate_result import summarize_metrics
+import time
 
 p = load_json('./params.json')
-TRAIN = False
+TRAIN = True
 TEST = True
 USE_DNGPA = True
 LATENT_DIM = len(p.output_list)
@@ -24,8 +26,6 @@ class FeatureExtractor(nn.Module):
     def __init__(self, input_dim, hidden_dim=255, output_dim=32):
         super().__init__()
         self.net = nn.Sequential(
-
-
             spectral_norm(nn.Linear(input_dim, hidden_dim)), nn.ReLU(),
             spectral_norm(nn.Linear(hidden_dim, hidden_dim)), nn.ReLU(),
             spectral_norm(nn.Linear(hidden_dim, hidden_dim)), nn.ReLU(),
@@ -71,8 +71,11 @@ def evaluate_prediction(y_true, y_pred, epsilon=1e-8):
         print(f"   R² Score: {r2:.4f}")
         e_list.append(mre)
         absolute_error_list.append(mae)
-    print(f"   MRE: {sum(e_list)/len(e_list):.2f}%")
-    print(f"   MRE: {sum(absolute_error_list)/len(absolute_error_list):.4f}")
+    # print(f"   MRE: {sum(e_list)/len(e_list):.2f}%")
+    # print(f"   MRE: {sum(absolute_error_list)/len(absolute_error_list):.4f}")
+    summary = summarize_metrics(y_true, y_pred)
+    for k, v in summary.items():
+        print(k, ":", v)
 
 def plot_predictions(y_true, y_pred, y_std=None, output_dir="plots"):
     os.makedirs(output_dir, exist_ok=True)
@@ -118,11 +121,12 @@ if TRAIN:
         y_svd = y
 
     for i in range(y_svd.shape[1]):
+        s_time = time.time()
         print(f"\n=== Training Latent Output {i} ===")
         y_tensor = torch.tensor(y_svd[:, i], dtype=torch.float32).to(device)
 
         feature_extractor = FeatureExtractor(input_dim=X_tensor.shape[1]).to(device)
-        num_inducing = 64
+        num_inducing = 2200
         torch.manual_seed(42)
         rand_indices = torch.randperm(X_tensor.size(0))[:num_inducing].to(device)
         inducing_points = X_tensor[rand_indices].to(device)
@@ -142,7 +146,7 @@ if TRAIN:
             loss = -mll(output, y_tensor)
             loss.backward()
             optimizer.step()
-
+        print(time.time()-s_time)
         torch.save(model.state_dict(), f"{save_dir}/model_{i}.pth")
         torch.save(likelihood.state_dict(), f"{save_dir}/likelihood_{i}.pth")
         torch.save(feature_extractor.state_dict(), f"{save_dir}/feature_{i}.pth")
