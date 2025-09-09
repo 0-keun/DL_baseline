@@ -10,6 +10,7 @@ from sklearn.decomposition import TruncatedSVD
 from sklearn.metrics import mean_absolute_error, r2_score
 import matplotlib.pyplot as plt
 from utils.utils import load_json
+from utils.data_processing import load_and_normalize
 from torch.nn.utils import spectral_norm
 from evaluate_result import summarize_metrics
 import time
@@ -17,8 +18,10 @@ import time
 p = load_json('./params.json')
 TRAIN = True
 TEST = True
-USE_DNGPA = True
+USE_SVD = True
 LATENT_DIM = len(p.output_list)
+
+UPDATE_SVD = False
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -108,15 +111,30 @@ if TRAIN:
     save_dir = os.path.join("model", "dkl_model")
     os.makedirs(save_dir, exist_ok=True)
 
-    scaler = StandardScaler().fit(X)
-    X_scaled = scaler.transform(X)
-    joblib.dump(scaler, os.path.join(save_dir, "scaler.pkl"))
+    X_scaled = load_and_normalize(X,'./scaler/scaler_250904/mean_152528.npy','./scaler/scaler_250904/scale_152528.npy')
+
     X_tensor = torch.tensor(X_scaled, dtype=torch.float32).to(device)
 
-    if USE_DNGPA:
-        svd = TruncatedSVD(n_components=LATENT_DIM).fit(y)
-        y_svd = svd.transform(y)
-        joblib.dump(svd, os.path.join(save_dir, "svd.pkl"))
+    if USE_SVD:
+        if UPDATE_SVD:
+            # SVD 학습
+            svd = TruncatedSVD(n_components=LATENT_DIM).fit(y)
+            y_svd = svd.transform(y)
+
+            # 저장
+            save_dir = "./svd_dir"
+            os.makedirs(save_dir, exist_ok=True)
+            joblib.dump(svd, os.path.join(save_dir, "svd.pkl"))
+
+            # svd = TruncatedSVD(n_components=LATENT_DIM).fit(y)
+            # y_svd = svd.transform(y)
+            # joblib.dump(svd, os.path.join(save_dir, "svd.pkl"))
+        else:
+            # 저장된 SVD 불러오기
+            svd_loaded = joblib.load(os.path.join(save_dir, "svd.pkl"))
+
+            # 새로운 데이터에 동일 변환 적용
+            y_svd = svd_loaded.transform(y)
     else:
         y_svd = y
 
@@ -126,7 +144,7 @@ if TRAIN:
         y_tensor = torch.tensor(y_svd[:, i], dtype=torch.float32).to(device)
 
         feature_extractor = FeatureExtractor(input_dim=X_tensor.shape[1]).to(device)
-        num_inducing = 2200
+        num_inducing = 256
         torch.manual_seed(42)
         rand_indices = torch.randperm(X_tensor.size(0))[:num_inducing].to(device)
         inducing_points = X_tensor[rand_indices].to(device)
@@ -140,7 +158,7 @@ if TRAIN:
         optimizer = torch.optim.Adam([{'params': model.parameters()}], lr=0.01)
         mll = gpytorch.mlls.VariationalELBO(likelihood, model, num_data=X_tensor.size(0))
 
-        for epoch in range(10000):
+        for epoch in range(50000):
             optimizer.zero_grad()
             output = model(X_tensor)
             loss = -mll(output, y_tensor)
@@ -162,15 +180,15 @@ if TEST:
     y_true = df_test[p.output_list].values
 
     model_dir = os.path.join("./model/dkl_model")
-    scaler = joblib.load(os.path.join(model_dir, "scaler.pkl"))
-    X_scaled = scaler.transform(X_new)
+    X_scaled = load_and_normalize(X_new,'./scaler/scaler_250904/mean_152528.npy','./scaler/scaler_250904/scale_152528.npy')
+
     X_tensor = torch.tensor(X_scaled, dtype=torch.float32).to(device)
 
-    svd = joblib.load(os.path.join(model_dir, "svd.pkl")) if USE_DNGPA else None
+    svd = joblib.load(os.path.join(model_dir, "svd.pkl")) if USE_SVD else None
 
     z_means = []
     z_stds = []
-    dim = LATENT_DIM if USE_DNGPA else y_true.shape[1]
+    dim = LATENT_DIM if USE_SVD else y_true.shape[1]
 
     for i in range(dim):
         print(f"Predicting Latent Output {i}")
@@ -205,7 +223,7 @@ if TEST:
             std = var.sqrt()
 
             z_means.append(mean.cpu().numpy())
-            z_stds .append(std.cpu().numpy())
+            z_stds.append(std.cpu().numpy())
 
     z_mean = np.stack(z_means, axis=1)
     z_std = np.stack(z_stds, axis=1)
@@ -215,8 +233,8 @@ if TEST:
     #     if np.isnan(row).any():
     #         print(f"[NaN Detected @ Sample {i}] {row}")
 
-    y_pred = svd.inverse_transform(z_mean) if USE_DNGPA else z_mean
-    y_std = svd.inverse_transform(z_std) if USE_DNGPA else z_std
+    y_pred = svd.inverse_transform(z_mean) if USE_SVD else z_mean
+    y_std = svd.inverse_transform(z_std) if USE_SVD else z_std
 
     evaluate_prediction(y_true, y_pred)
     plot_predictions(y_true, y_pred)

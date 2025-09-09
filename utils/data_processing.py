@@ -5,6 +5,8 @@ from tensorflow.keras.utils import to_categorical
 import os
 from sklearn.preprocessing import StandardScaler
 from utils.utils import name_date, name_time, name_to_dir
+from sklearn.metrics import mean_absolute_error, r2_score
+from evaluate_result import summarize_metrics
 
 ##########################################
 ##             NORMALIZATION            ##
@@ -231,3 +233,27 @@ def make_sequence_dataset(dir_path, time_steps, feature_list, classes_list, scal
         y = np.array(y_list)   # (전체시퀀스수, time_steps, C) 또는 (전체시퀀스수, time_steps)
 
     return X, y
+
+def evaluate_prediction(y_true, y_pred, epsilon=1e-8):
+    e_list = []
+    absolute_error_list = []
+    for i in range(y_pred.shape[1]):
+        y_t = y_true[:, i]
+        y_p = y_pred[:, i]
+
+        mae = mean_absolute_error(y_t, y_p)
+        relative_error = np.abs((y_p - y_t) / (y_t + epsilon))
+        mre = np.mean(relative_error) * 100
+        r2 = r2_score(y_t, y_p)
+
+        print(f"\n>> [Output {i}]")
+        print(f"   MAE: {mae:.4f}")
+        print(f"   Mean Relative Error: {mre:.2f}%")
+        print(f"   R² Score: {r2:.4f}")
+        e_list.append(mre)
+        absolute_error_list.append(mae)
+    # print(f"   MRE: {sum(e_list)/len(e_list):.2f}%")
+    # print(f"   MRE: {sum(absolute_error_list)/len(absolute_error_list):.4f}")
+    summary = summarize_metrics(y_true, y_pred)
+    for k, v in summary.items():
+        print(k, ":", v)

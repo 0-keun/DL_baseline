@@ -58,7 +58,7 @@ class Tester():
     def __init__(self, model_name):
         # self.hidden_state, self.num_layer, _ = get_params(model_name)
         X = df[p.feature_list].values 
-        self.X_input = load_and_normalize(X,'./scaler/scaler_250612/mean_213605.npy','./scaler/scaler_250612/scale_213605.npy')
+        self.X_input = load_and_normalize(X,'./scaler/scaler_250904/mean_152528.npy','./scaler/scaler_250904/scale_152528.npy')
         self.y_output = df[p.output_list].values 
 
         self.model = load_model(model_name)
@@ -102,7 +102,7 @@ class Tester():
         for k, v in summary.items():
             print(k, ":", v)
 
-test = Tester('./model/model_250801/DNN_DAB_est_024042.h5')   # epochs: 1000
+test = Tester('./model/model_250904/DNN_DAB_est_161620.h5')   # epochs: 1000
 # test = Tester('./model/model_250801/DNN_DAB_est_110041.h5')   # epochs: 10000
 
 test.main()

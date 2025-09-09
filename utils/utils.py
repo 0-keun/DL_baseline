@@ -79,6 +79,44 @@ def get_confusion_mat(y_true, y_pred, name='confusion_matrix', time_flag=False ,
     if save_csv:
         np.savetxt(csv_filepath, cm, fmt='%d', delimiter=',')
 
+def plot_predictions(y_true, y_pred, y_std=None, output_dir="plots"):
+    os.makedirs(output_dir, exist_ok=True)
+    for i in range(y_pred.shape[1]):
+        plt.figure(figsize=(8, 4))
+        plt.plot(y_true[:, i], label='Ground Truth')
+        plt.plot(y_pred[:, i], label='Prediction (Mean)')
+        if y_std is not None:
+            lower = y_pred[:, i] - 2 * y_std[:, i]
+            upper = y_pred[:, i] + 2 * y_std[:, i]
+            plt.fill_between(np.arange(len(y_pred)), lower, upper, alpha=0.3, label='±2σ Uncertainty')
+        plt.title(f"Output {i}: Prediction with Uncertainty")
+        plt.xlabel("Sample Index")
+        plt.ylabel("Value")
+        plt.legend()
+        plt.tight_layout()
+        plt.savefig(os.path.join(output_dir, f"output_{i}_prediction.png"))
+        plt.close()
+
+def plot_2lines_N(y_true,y_pred,n_out,mean_dir="plots_mean"):
+    for i in range(n_out):
+        plt.figure(figsize=(8,4))
+        plt.plot(y_true[:, i], label='Ground Truth')
+        plt.plot(y_pred[:, i], label='Predicted Mean')
+        plt.title(f'Output {i} Mean Prediction')
+        plt.xlabel('Sample Index'); plt.ylabel('Value')
+        plt.legend(); plt.tight_layout()
+        plt.savefig(os.path.join(mean_dir, f'output_{i}_mean.png'))
+        plt.close()
+
+def plot_std_N(y_std,n_out,std_dir="plots_std"):
+    for i in range(n_out):
+        plt.figure(figsize=(8,4))
+        plt.plot(y_std[:, i], label='Predicted Std Dev')
+        plt.title(f'Output {i} Std Dev')
+        plt.xlabel('Sample Index'); plt.ylabel('Std Dev')
+        plt.legend(); plt.tight_layout()
+        plt.savefig(os.path.join(std_dir, f'output_{i}_std.png'))
+        plt.close()
 
 ##############################
 ##           NAME           ##
@@ -145,3 +183,4 @@ def name_to_dir(name, time_flag=False):
         os.makedirs(dirname, exist_ok=True)
     
     return dirname
+
