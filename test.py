@@ -75,7 +75,8 @@ class Tester():
         # 예측 수행
         y_pred = self.model.predict(self.X_input)
         pred_df = pd.DataFrame(y_pred, columns=[f"y{i}_pred_v" for i in range(y_pred.shape[1])])
-        pred_df.to_csv("predicted_vanilla.csv", index=False)
+        result_dir = name_to_dir("results")
+        pred_df.to_csv(result_dir+"predicted_vanilla.csv", index=False)
             
         np.set_printoptions(suppress=True, precision=6)
         # print(f"Actual: {self.y_output}")
@@ -96,13 +97,14 @@ class Tester():
         mean_absolute_error = np.mean(absolute_error)
         # print(f"평균 Percent Error: {mean_percent_error:.4f}%")
         # print(f"평균 Absolute Error: {mean_absolute_error:.4f}")
-        plot_predictions(self.y_output, y_pred, output_dir='plots_baseline')
+        plot_dir = name_to_dir("plots/plots_baseline")
+        plot_predictions(self.y_output, y_pred, output_dir=plot_dir)
 
         summary = summarize_metrics(self.y_output, y_pred)
         for k, v in summary.items():
             print(k, ":", v)
 
-test = Tester('./model/model_250904/DNN_DAB_est_161620.h5')   # epochs: 1000
+test = Tester('./model/model_250915/DNN_DAB_est_051535.h5')   # epochs: 1000
 # test = Tester('./model/model_250801/DNN_DAB_est_110041.h5')   # epochs: 10000
 
 test.main()

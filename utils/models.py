@@ -118,6 +118,66 @@ import torch
 import torch.nn as nn
 from torch.nn.utils import spectral_norm
 import gpytorch
+import torch.nn.functional as F
+
+import torch
+import torch.nn as nn
+from torch.nn.utils import spectral_norm
+
+class ResidualFFBlock(nn.Module):
+    """
+    Fully-connected residual block.
+    in_dim -> hidden_dim -> out_dim, 필요 시 residual projection으로 차원 맞춤
+    """
+    def __init__(self, in_dim, hidden_dim, out_dim, dropout: float = 0.0):
+        super().__init__()
+        self.fc1 = spectral_norm(nn.Linear(in_dim, hidden_dim))
+        self.fc2 = spectral_norm(nn.Linear(hidden_dim, out_dim))
+        self.act = nn.ReLU()
+        self.dropout = nn.Dropout(dropout) if dropout > 0 else nn.Identity()
+
+        # in_dim != out_dim이면 projection으로 residual 차원 정렬
+        if in_dim != out_dim:
+            self.proj = spectral_norm(nn.Linear(in_dim, out_dim))
+        else:
+            self.proj = nn.Identity()
+
+    def forward(self, x):
+        residual = x
+        out = self.act(self.fc1(x))
+        out = self.dropout(out)
+        out = self.fc2(out)
+        out = out + self.proj(residual)
+        return self.act(out)
+
+
+class FeatureExtractorRes(nn.Module):
+    """
+    SN 기반 FFNN + Residual 연결 (입력 차원 → hidden 승격 후 hidden 영역에서 잔차)
+    기존 FeatureExtractor와 동일한 시그니처 유지: (input_dim, hidden_dim=512, output_dim=64)
+    """
+    def __init__(self, input_dim, hidden_dim=512, output_dim=64, dropout: float = 0.0):
+        super().__init__()
+        print("FFNN with Spectral Normalization + Residual connections is adopted.")
+
+        # 1) input -> hidden (lift)
+        self.fc_in = nn.Sequential(
+            spectral_norm(nn.Linear(input_dim, hidden_dim)),
+            nn.ReLU()
+        )
+
+        # 2) hidden 구간에서만 residual block 적용
+        self.block1 = ResidualFFBlock(hidden_dim, hidden_dim, hidden_dim, dropout=dropout)
+        self.block2 = ResidualFFBlock(hidden_dim, hidden_dim, hidden_dim, dropout=dropout)
+
+        # 3) hidden -> output
+        self.output_layer = spectral_norm(nn.Linear(hidden_dim, output_dim))
+
+    def forward(self, x):
+        x = self.fc_in(x)      # (B, hidden_dim)
+        x = self.block1(x)     # (B, hidden_dim)
+        x = self.block2(x)     # (B, hidden_dim)
+        return self.output_layer(x)  # (B, output_dim)
 
 class FeatureExtractor(nn.Module):
     def __init__(self, input_dim, hidden_dim=512, output_dim=64):
