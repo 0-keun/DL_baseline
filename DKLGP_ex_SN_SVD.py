@@ -94,6 +94,10 @@ def inv_data(y, idx):
     scaler = joblib.load(f"{MODEL_DIR}/scaler_y_{idx}.pkl")
     return scaler.inverse_transform(y).reshape(-1)
 
+def inv_std(std, idx):
+    scaler = joblib.load(f"{MODEL_DIR}/scaler_y_{idx}.pkl")
+
+    return std * scaler.scale_[0]
 # --------------------------
 # Model Definition
 # --------------------------
@@ -305,7 +309,7 @@ def test():
         print(f"mean: {mean}")
         # print(f"var: {var}")
         y_pred = inv_data(mean.cpu().numpy().reshape(-1,1), i)
-        y_std  = inv_data(std.cpu().numpy().reshape(-1,1), i)
+        y_std  = inv_std(std.cpu().numpy().reshape(-1,1), i)
 
         y_preds.append(y_pred)
         y_stds.append(y_std)
@@ -313,7 +317,26 @@ def test():
 
     if SVD_FLAG:
         y_preds = get_inv_svd_data(np.array(y_preds).T)
-        y_stds = get_inv_svd_data(np.array(y_stds).T)
+        Z_std_norm = np.array(y_stds).T
+
+        scales = []
+        for i in range(SVD_DIM):  # r
+            scaler_i = joblib.load(f"{MODEL_DIR}/scaler_y_{i}.pkl")
+            scales.append(scaler_i.scale_[0])
+
+        scales = np.array(scales)  # (r,)
+
+        # (4) 스케일러 역변환 (평균/분산 규칙)
+        Z_var_raw = (Z_std_norm**2) # * (scales[None, :]**2)             # (n, r)
+
+        # (5) SVD 역투영: 평균과 분산(대각) 계산
+        svd = load_SVD(f"{SVD_DIR}/svd.pkl")
+        V_r = svd.components_.T                  # (d, r)
+        V_r_sq = V_r**2                          # (d, r)
+
+        Y_var = Z_var_raw @ V_r_sq.T             # (n, d)  -> 각 출력 j의 분산
+        Y_std = np.sqrt(Y_var)                   # (n, d)
+        y_stds  = Y_std
 
     else:
         y_preds = np.array(y_preds).T
@@ -329,6 +352,7 @@ def test():
     evaluate_prediction(y_trues, y_preds)
     # plot_predictions(y_trues, y_preds)
 
+    y_stds = np.squeeze(y_stds)
     pred_df = pd.DataFrame(y_preds, columns=[f"y{i}_pred" for i in range(y_preds.shape[1])])
     std_df  = pd.DataFrame(y_stds,  columns=[f"y{i}_std"  for i in range(y_stds.shape[1])])
 
@@ -337,6 +361,8 @@ def test():
     pred_df.to_csv(result_dir+"predicted.csv", index=False)
     std_df.to_csv(result_dir+"predicted_std.csv", index=False)
 
+    mean_dir = name_to_dir(f"plots/{SN}dklgp{SVD}/mean")
+    std_dir = name_to_dir(f"plots/{SN}dklgp{SVD}/std")
     mean_dir = name_to_dir(f"plots/{SN}dklgp{SVD}/mean")
     std_dir = name_to_dir(f"plots/{SN}dklgp{SVD}/std")
     n_out = y_preds.shape[1]

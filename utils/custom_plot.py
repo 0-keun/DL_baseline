@@ -81,7 +81,7 @@ def draw_single_subplot_for_prop(time, data_1, data_2, data_3, data_4, data_5, t
     plt.xticks(fontsize=20)
     plt.yticks(fontsize=20)
 
-    plt.plot(time, data_1, label='Baseline', color='#1f77b4', linewidth=1.5, linestyle='--')
+    plt.plot(time, data_1, label='Baseline', color='#1f77b4', linewidth=4)
 
     plt.plot(time, data_2, label='Proposed v1', color='#2ca02c', linewidth=4)
     plt.plot(time, data_3, label='Proposed v2', color='#ff7f0e', linewidth=4)

@@ -94,6 +94,11 @@ def inv_data(y, idx):
     scaler = joblib.load(f"{MODEL_DIR}/scaler_y_{idx}.pkl")
     return scaler.inverse_transform(y).reshape(-1)
 
+def inv_std(std, idx):
+    scaler = joblib.load(f"{MODEL_DIR}/scaler_y_{idx}.pkl")
+
+    return std * scaler.scale_[0]
+
 # --------------------------
 # Model Definition
 # --------------------------
@@ -297,10 +302,10 @@ def test():
             # 분산 음수 클램핑 & std 계산
             var = var.clamp(min=0.0)
             std = var.sqrt()
-        print(f"mean: {mean}")
-        print(f"var: {var}")
+        # print(f"mean: {mean}")
+        # print(f"var: {var}")
         y_pred = inv_data(mean.cpu().numpy().reshape(-1,1), i)
-        y_std  = inv_data(std.cpu().numpy().reshape(-1,1), i)
+        y_std  = inv_std(std.cpu().numpy().reshape(-1,1), i)
         y_true = inv_data(test_y.cpu().numpy().reshape(-1,1), i)
 
         y_preds.append(y_pred)
@@ -325,6 +330,7 @@ def test():
     evaluate_prediction(y_trues, y_preds)
     # plot_predictions(y_trues, y_preds)
 
+    y_stds = np.squeeze(y_stds)
     pred_df = pd.DataFrame(y_preds, columns=[f"y{i}_pred" for i in range(y_preds.shape[1])])
     std_df  = pd.DataFrame(y_stds,  columns=[f"y{i}_std"  for i in range(y_stds.shape[1])])
 

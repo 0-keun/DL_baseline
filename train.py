@@ -10,7 +10,9 @@ from utils.data_processing import normalize_and_save, normalize_std_scaler, load
 from utils.models import FFNN_model
 from utils.utils import load_json, save_acc_plot, save_loss_plot, name_date, name_time, name_to_dir
 from tensorflow.keras.callbacks import Callback
+import time
 
+s_time = time.time()
 # n번에 한 번씩 출력하는 콜백 정의
 class PrintEveryNEpoch(Callback):
     def __init__(self, n=10):
@@ -74,3 +76,5 @@ except KeyboardInterrupt:
     model_path = os.path.join(MODEL_DIR, model_name)
     model.save(model_path)
     print(f"Saved model to {model_path}")
+
+print(time.time() - s_time)
