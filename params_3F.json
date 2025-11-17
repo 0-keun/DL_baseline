@@ -19,9 +19,9 @@
         "SHORT_NOISE",
         "NORMAL_NOISE"
     ],
-    "train_data_dir": "./dataset/dataset_steady/dataset_steady_normal",
+    "train_data_dir": "./dataset/dataset_251023_train",
     "noise_data_dir": "./dataset/dataset_steady_noise/dataset_steady_noise_normal",
-    "test_data_dir": "./dataset/250821_dataset_HILS",
+    "test_data_dir": "./dataset/dataset_251023_train",
     "epochs": 170,
     "batch_size": 256
 }

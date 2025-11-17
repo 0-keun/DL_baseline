@@ -185,3 +185,15 @@ def name_to_dir(name, time_flag=False):
         os.makedirs(dirname, exist_ok=True)
     
     return dirname
+
+def add_dir_end(dir_path, end_str):
+    if not dir_path.endswith('/'):
+        dir_path += '/'
+    dir_path += end_str
+    if not dir_path.endswith('/'):
+        dir_path += '/'
+
+    if not os.path.exists(dir_path+end_str):
+        os.makedirs(dir_path, exist_ok=True)
+    
+    return dir_path

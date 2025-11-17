@@ -249,7 +249,8 @@ def make_sequence_dataset(dir_path, time_steps, feature_list, classes_list, scal
                 features = df[feature_list].values  # (N, F)
                 classes = df[classes_list].values   # (N, C) 또는 (N,) 형태
                 
-                N = len(df)
+                # N = len(df)
+                N = 500
                 for i in range(N - time_steps):
                     X_seq = features[i:i+time_steps]     # (time_steps, F)
                     y_seq = classes[i+time_steps-1]      # (time_steps, C) 또는 (time_steps,)

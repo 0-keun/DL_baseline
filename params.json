@@ -1,23 +1,16 @@
 {
-    "time_steps": 150,
-    "bulk_size": 200,
+    "time_steps": 250,
+    "bulk_size": 750,
     "feature_list": [
         "Vo:Measured voltage",
         "IL:Measured current",
         "Vin:Measured voltage"
     ],
     "classes_list": [
-        "short1:Output",
-        "short2:Output",
-        "short3:Output",
-        "short4:Output",
-        "open1:Output",
-        "open3:Output",
-        "open2:Output",
-        "open4:Output"
+        "open1","open2","open3","open4","short1","short2","short3","short4"
     ],
-    "train_data_dir": "./dataset/dataset_train_250610",
-    "test_data_dir": "./dataset/dataset_test_250610",
+    "train_data_dir": "./dataset/dataset_train_8F_251023",
+    "test_data_dir": "./dataset/dataset_test_8F_251023",
     "epochs": 100,
-    "batch_size": 64
+    "batch_size": 512
 }
